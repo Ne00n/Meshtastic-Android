@@ -30,14 +30,12 @@ import org.meshtastic.feature.node.model.isEffectivelyUnmessageable
 
 @Composable
 internal fun RemoteDeviceActions(node: Node, lastTracerouteTime: Long?, onAction: (NodeDetailAction) -> Unit) {
-    if (!node.isEffectivelyUnmessageable) {
-        SettingsItem(
-            text = stringResource(id = R.string.direct_message),
-            leadingIcon = Icons.AutoMirrored.TwoTone.Message,
-            trailingContent = {},
-            onClick = { onAction(NodeDetailAction.HandleNodeMenuAction(NodeMenuAction.DirectMessage(node))) },
-        )
-    }
+    SettingsItem(
+        text = stringResource(id = R.string.direct_message),
+        leadingIcon = Icons.AutoMirrored.TwoTone.Message,
+        trailingContent = {},
+        onClick = { onAction(NodeDetailAction.HandleNodeMenuAction(NodeMenuAction.DirectMessage(node))) },
+    )
     SettingsItem(
         text = stringResource(id = R.string.exchange_userinfo),
         leadingIcon = Icons.Default.Person,
