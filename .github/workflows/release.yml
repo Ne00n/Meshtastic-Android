@@ -17,7 +17,7 @@ on:
         type: string
     secrets:
       GSERVICES:
-        required: true
+        required: false
       KEYSTORE:
         required: true
       KEYSTORE_FILENAME:
@@ -25,13 +25,13 @@ on:
       KEYSTORE_PROPERTIES:
         required: true
       DATADOG_APPLICATION_ID:
-        required: true
+        required: false
       DATADOG_CLIENT_TOKEN:
-        required: true
+        required: false
       GOOGLE_MAPS_API_KEY:
-        required: true
+        required: false
       GOOGLE_PLAY_JSON_KEY:
-        required: true
+        required: false
       GRADLE_ENCRYPTION_KEY:
         required: true
 
