@@ -83,7 +83,7 @@ androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling
 # Google
 android-desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
-firebase-bom = { module = "com.google.firebase:firebase-bom", version = "34.3.0" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version = "34.4.0" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 guava = { module = "com.google.guava:guava", version = "33.5.0-jre" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
@@ -157,7 +157,7 @@ detekt-compose = { module = "io.nlopez.compose.rules:detekt", version = "0.4.27"
 detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
 detekt-gradlePlugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 firebase-crashlytics-gradlePlugin = { module = "com.google.firebase:firebase-crashlytics-gradle", version = "3.0.6" }
-google-services-gradlePlugin = { module = "com.google.gms.google-services:com.google.gms.google-services.gradle.plugin", version = "4.4.3" }
+google-services-gradlePlugin = { module = "com.google.gms.google-services:com.google.gms.google-services.gradle.plugin", version = "4.4.4" }
 hilt-gradlePlugin = { module = "com.google.dagger:hilt-android-gradle-plugin", version.ref = "hilt" }
 ksp-gradlePlugin = { module = "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin", version.ref = "devtools-ksp" }
 secrets-gradlePlugin = {module = "com.google.android.secrets-gradle-plugin:com.google.android.secrets-gradle-plugin.gradle.plugin", version = "1.1.0"}
@@ -181,7 +181,7 @@ ktorfit = { id = "de.jensklingenberg.ktorfit", version.ref = "ktorfit" }
 
 # Google
 devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "devtools-ksp" }
-google-services = { id = "com.google.gms.google-services", version = "4.4.3" }
+google-services = { id = "com.google.gms.google-services", version = "4.4.4" }
 hilt = { id = "com.google.dagger.hilt.android" , version.ref = "hilt" }
 secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version = "2.0.1" }
 
