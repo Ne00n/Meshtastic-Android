@@ -86,20 +86,6 @@ jobs:
           echo "versionCode=$VERSION_CODE" >> $GITHUB_OUTPUT
         shell: bash
 
-  promote-release:
-    runs-on: ubuntu-latest
-    environment: Release
-    needs: [ prepare-build-info ]
-    steps:
-      - name: Promote to next channel
-        uses: kevin-david/promote-play-release@v1.2.0
-        with:
-          service-account-json-raw: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
-          package-name: 'com.geeksville.mesh'
-          from-track: 'internal'
-          to-track: ${{ inputs.channel == 'closed' && 'NewAlpha' || (inputs.channel == 'open' && 'beta' || 'production') }}
-          user-fraction: ${{ (inputs.channel == 'production' && '0.1') || (inputs.channel == 'open' && '0.5') || '1.0' }}
-
   update-github-release:
     runs-on: ubuntu-latest
     needs: [ prepare-build-info, promote-release ]
