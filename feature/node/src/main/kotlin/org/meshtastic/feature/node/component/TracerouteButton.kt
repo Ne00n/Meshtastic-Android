@@ -38,7 +38,7 @@ import org.meshtastic.core.strings.R
 import org.meshtastic.core.ui.component.SettingsItem
 import org.meshtastic.core.ui.theme.AppTheme
 
-private const val COOL_DOWN_TIME_MS = 5000L
+private const val COOL_DOWN_TIME_MS = 2000L
 
 @Composable
 fun TracerouteButton(
