@@ -158,16 +158,16 @@ fun BLEDevices(
                         }
                     }
 
-                    val disableButton: @Composable () -> Unit = {
+                    val disconnectButton: @Composable () -> Unit = {
                         Button(
-                            onClick = { connectionsViewModel.bluetoothRepository.disableBluetooth() },
+                            onClick = { scanModel.disconnect() },
                         ) {
                             Row {
                                 Icon(
                                     imageVector = Icons.Rounded.BluetoothDisabled,
-                                    contentDescription = stringResource(R.string.disable_bluetooth),
+                                    contentDescription = stringResource(R.string.disconnect),
                                 )
-                                Text(stringResource(R.string.disable_bluetooth))
+                                Text(stringResource(R.string.disconnect))
                             }
                         }
                     }
@@ -198,14 +198,14 @@ fun BLEDevices(
                             onSelect = scanModel::onSelected,
                         )
 
-                        // Add a row with both scan and disable buttons
+                        // Add a row with both scan and disconnect buttons
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             scanButton()
-                            disableButton()
+                            disconnectButton()
                         }
                     }
                 }

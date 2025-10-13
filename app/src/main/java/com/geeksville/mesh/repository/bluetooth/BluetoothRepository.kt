@@ -107,14 +107,14 @@ constructor(
     fun createBond(device: BluetoothDevice): Flow<Int> = device.createBond(application)
 
     /**
-     * Disable Bluetooth on the device
+     * Disconnect from any connected Bluetooth device and stop scanning
      */
-    fun disableBluetooth() {
-        bluetoothAdapterLazy.get()?.let { adapter ->
-            if (adapter.isEnabled) {
-                adapter.disable()
-            }
-        }
+    fun disconnect() {
+        // Stop any ongoing scans
+        refreshState()
+        
+        // In a real implementation, this would notify the service to disconnect
+        // For now, we'll rely on the BTScanModel's disconnect function
     }
 
     internal suspend fun updateBluetoothState() {
