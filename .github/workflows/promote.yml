@@ -90,9 +90,9 @@ jobs:
           echo "versionCode=$VERSION_CODE" >> $GITHUB_OUTPUT
         shell: bash
 
-  update-github-release:
+  promote-release:
     runs-on: ubuntu-latest
-    needs: [ prepare-build-info ]
+    environment: Release
     steps:
       - name: Promote to next channel
         uses: kevin-david/promote-play-release@v1.2.0
