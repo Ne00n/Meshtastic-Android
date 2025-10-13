@@ -106,6 +106,17 @@ constructor(
     @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
     fun createBond(device: BluetoothDevice): Flow<Int> = device.createBond(application)
 
+    /**
+     * Disable Bluetooth on the device
+     */
+    fun disableBluetooth() {
+        bluetoothAdapterLazy.get()?.let { adapter ->
+            if (adapter.isEnabled) {
+                adapter.disable()
+            }
+        }
+    }
+
     internal suspend fun updateBluetoothState() {
         val hasPerms = application.hasBluetoothPermission()
         val newState: BluetoothState =

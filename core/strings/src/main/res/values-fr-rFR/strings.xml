@@ -265,6 +265,7 @@
     <string name="quick_chat_hide">Masquer le menu de discussion rapide</string>
     <string name="factory_reset">Réinitialisation d\'usine</string>
     <string name="bluetooth_disabled">Le Bluetooth est désactivé. Veuillez l\'activer dans les paramètres de votre appareil.</string>
+    <string name="disable_bluetooth">Désactiver le Bluetooth</string>
     <string name="open_settings">Ouvrir les paramètres</string>
     <string name="firmware_version">Version du firmware : %1$s</string>
     <string name="permission_missing_31">Meshtastic a besoin des autorisations \"Périphériques à proximité\" activées pour trouver et se connecter à des appareils via Bluetooth. Vous pouvez désactiver la lorsque la localisation n\'est pas utilisée.</string>

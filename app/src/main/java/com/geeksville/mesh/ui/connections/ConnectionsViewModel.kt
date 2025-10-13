@@ -42,7 +42,7 @@ constructor(
     radioConfigRepository: RadioConfigRepository,
     serviceRepository: ServiceRepository,
     nodeRepository: NodeRepository,
-    bluetoothRepository: BluetoothRepository,
+    val bluetoothRepository: BluetoothRepository,
     private val uiPrefs: UiPrefs,
 ) : ViewModel() {
     val localConfig: StateFlow<LocalConfig> =

@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BluetoothDisabled
@@ -48,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geeksville.mesh.model.BTScanModel
 import com.geeksville.mesh.model.DeviceListEntry
+import com.geeksville.mesh.repository.bluetooth.BluetoothRepository
+import com.geeksville.mesh.ui.connections.ConnectionsViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -74,6 +77,7 @@ fun BLEDevices(
     selectedDevice: String,
     scanModel: BTScanModel,
     bluetoothEnabled: Boolean,
+    connectionsViewModel: ConnectionsViewModel,
 ) {
     LocalContext.current // Used implicitly by stringResource
     val isScanning by scanModel.spinner.collectAsStateWithLifecycle(false)
@@ -154,6 +158,20 @@ fun BLEDevices(
                         }
                     }
 
+                    val disableButton: @Composable () -> Unit = {
+                        Button(
+                            onClick = { connectionsViewModel.bluetoothRepository.disableBluetooth() },
+                        ) {
+                            Row {
+                                Icon(
+                                    imageVector = Icons.Rounded.BluetoothDisabled,
+                                    contentDescription = stringResource(R.string.disable_bluetooth),
+                                )
+                                Text(stringResource(R.string.disable_bluetooth))
+                            }
+                        }
+                    }
+
                     if (bondedDevices.isEmpty() && availableDevices.isEmpty()) {
                         EmptyStateContent(
                             imageVector = Icons.Rounded.BluetoothDisabled,
@@ -180,7 +198,15 @@ fun BLEDevices(
                             onSelect = scanModel::onSelected,
                         )
 
-                        scanButton()
+                        // Add a row with both scan and disable buttons
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            scanButton()
+                            disableButton()
+                        }
                     }
                 }
             }
