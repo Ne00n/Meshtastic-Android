@@ -235,7 +235,7 @@ fun ConnectionsScreen(
                                     selectedDevice = selectedDevice,
                                     scanModel = scanModel,
                                     bluetoothEnabled = bluetoothState.enabled,
-                                    bluetoothRepository = connectionsViewModel,
+                                    connectionsViewModel = connectionsViewModel,
                                 )
                             }
 
