@@ -23,6 +23,10 @@ on:
         description: 'The channel to promote to'
         required: true
         type: string
+      from_channel:
+        description: 'The channel to promote from'
+        required: true
+        type: string
     secrets:
       GSERVICES:
         required: false
