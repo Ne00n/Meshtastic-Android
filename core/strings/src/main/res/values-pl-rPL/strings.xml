@@ -61,7 +61,7 @@
     <string name="role_client_mute_desc">Wyciszenie klienta - To samo, co klient, z wyjątkiem pakietów, które nie przeskakują przez ten węzeł, nie przyczynia się do routingu pakietów dla siatki.</string>
     <string name="role_router">Router</string>
     <string name="role_router_desc">Węzeł infrastruktury do rozszerzenia zasięgu sieci poprzez przekazywanie pakietów. Widoczny na liście węzłów.</string>
-    <string name="role_router_client">Router Client</string>
+    <string name="role_router_client">Router Klienta</string>
     <string name="role_router_client_desc">Połączenie zarówno trybu ROUTER, jak i CLIENT. Nie dla urządzeń przenośnych.</string>
     <string name="role_repeater">Repeater</string>
     <string name="role_repeater_desc">Węzeł infrastruktury do rozszerzenia zasięgu sieci poprzez przekazywanie pakietów z minimalnym narzutem. Niewidoczny na liście węzłów.</string>
@@ -95,6 +95,7 @@
     <string name="config_device_tripleClickAsAdHocPing_summary">Send a position on the primary channel when the user button is triple clicked.</string>
     <string name="config_device_ledHeartbeatEnabled_summary">Kontroluje miganie LED na urządzeniu. Dla większości urządzeń będzie to sterować jednym z maksymalnie 4 diod LED, ładowarka i diody GPS nie są sterowane.</string>
     <string name="config_device_tzdef_summary">Time zone for dates on the device screen and log.</string>
+    <string name="config_device_use_phone_tz">Use phone time zone</string>
     <string name="config_device_transmitOverLora_summary">Czy oprócz wysyłania do MQTT i PhoneAPI, NeighborInfo powinny być przesłane przez LoRa? Niedostępny na kanale z domyślnym kluczem i nazwą.</string>
     <string name="config_display_screen_on_secs_summary">How long the screen remains on after the user button is pressed or messages are received.</string>
     <string name="config_display_auto_screen_carousel_secs_summary">Automatically toggles to the next page on the screen like a carousel, based the specified interval.</string>
@@ -108,7 +109,7 @@
     <string name="config_lora_region_summary">The region where you will be using your radios.</string>
     <string name="config_lora_modem_preset_summary">Available modem presets, default is Long Fast.</string>
     <string name="config_lora_hop_limit_summary">Sets the maximum number of hops, default is 3. Increasing hops also increases congestion and should be used carefully. 0 hop broadcast messages will not get ACKs.</string>
-    <string name="config_lora_frequency_slot_summary">Your node’s operating frequency is calculated based on the region, modem preset, and this field. When 0, the slot is automatically calculated based on the primary channel name and will change from the default public slot. Change back to the public default slot if private primary and public secondary channels are configured.</string>
+    <string name="config_lora_frequency_slot_summary"></string>
     <string name="label_very_long_slow">Very Long Range - Slow</string>
     <string name="label_long_fast">Long Range - Fast</string>
     <string name="label_long_moderate">Long Range - Moderate</string>
@@ -179,6 +180,9 @@
     <string name="ip_port">Port:</string>
     <string name="connected">Połączony</string>
     <string name="connected_to">Połączono z urządzeniem (%s)</string>
+    <string name="connection_status">Current connections:</string>
+    <string name="wifi_ip">Wifi IP:</string>
+    <string name="ethernet_ip">Ethernet IP:</string>
     <string name="not_connected">Nie połączono</string>
     <string name="connected_sleeping">Połączono z urządzeniem, ale jest ono w stanie uśpienia</string>
     <string name="app_too_old">Konieczna aktualizacja aplikacji</string>
@@ -311,6 +315,11 @@
     <string name="mute_8_hours">8 godzin</string>
     <string name="mute_1_week">1 tydzień</string>
     <string name="mute_always">Na zawsze</string>
+    <string name="currently">Currently:</string>
+    <string name="mute_status_always">Always muted</string>
+    <string name="mute_status_unmuted">Not muted</string>
+    <string name="mute_status_muted_for_days">Muted for %1d days, %.1f hours</string>
+    <string name="mute_status_muted_for_hours">Muted for %.1f hours</string>
     <string name="replace">Zastąp</string>
     <string name="wifi_qr_code_scan">Skanuj kod QR Wi-Fi</string>
     <string name="wifi_qr_code_error">Nieprawidłowy format kodu QR</string>
@@ -329,6 +338,7 @@
     <string name="ch_util_definition">Wykorzystanie dla bieżącego kanału, w tym prawidłowego TX/RX oraz zniekształconego RX (czyli szumu).</string>
     <string name="air_util_definition">Procent czasu  wykorzystanego do transmisji w ciągu ostatniej godziny.</string>
     <string name="iaq">IAQ</string>
+    <string name="show_all_key_title">Encryption Key Meanings</string>
     <string name="encryption_psk">Klucz współdzielony</string>
     <string name="encryption_psk_text">Only channel messages can be sent/received. Direct Messages require the Public Key Infrastructure feature in 2.5+ firmware.</string>
     <string name="encryption_pkc">Szyfrowanie klucza publicznego</string>
@@ -593,10 +603,10 @@
     <string name="shutdown_on_battery_delay_seconds">Shutdown on battery delay (seconds)</string>
     <string name="adc_multiplier_override">ADC multiplier override</string>
     <string name="adc_multiplier_override_ratio">ADC multiplier override ratio</string>
-    <string name="wait_for_bluetooth_duration_seconds">Wait for Bluetooth duration (seconds)</string>
-    <string name="super_deep_sleep_duration_seconds">Super deep sleep duration (seconds)</string>
-    <string name="light_sleep_duration_seconds">Light sleep duration (seconds)</string>
-    <string name="minimum_wake_time_seconds">Minimum wake time (seconds)</string>
+    <string name="wait_for_bluetooth_duration_seconds">Wait for Bluetooth duration</string>
+    <string name="super_deep_sleep_duration_seconds">Super deep sleep duration</string>
+    <string name="light_sleep_duration_seconds">Light sleep duration</string>
+    <string name="minimum_wake_time_seconds">Minimum wake time</string>
     <string name="battery_ina_2xx_i2c_address">Battery INA_2XX I2C address</string>
     <string name="range_test_config">Konfiguracja testu zasięgu</string>
     <string name="range_test_enabled">Range test enabled</string>
@@ -630,16 +640,16 @@
     <string name="history_return_window">History return window</string>
     <string name="server">Serwer</string>
     <string name="telemetry_config">Konfiguracja telemetrii</string>
-    <string name="device_metrics_update_interval_seconds">Device metrics update interval (seconds)</string>
-    <string name="environment_metrics_update_interval_seconds">Environment metrics update interval (seconds)</string>
+    <string name="device_metrics_update_interval_seconds">Device metrics update interval</string>
+    <string name="environment_metrics_update_interval_seconds">Environment metrics update interval</string>
     <string name="environment_metrics_module_enabled">Environment metrics module enabled</string>
     <string name="environment_metrics_on_screen_enabled">Environment metrics on-screen enabled</string>
     <string name="environment_metrics_use_fahrenheit">Environment metrics use Fahrenheit</string>
     <string name="air_quality_metrics_module_enabled">Air quality metrics module enabled</string>
-    <string name="air_quality_metrics_update_interval_seconds">Air quality metrics update interval (seconds)</string>
+    <string name="air_quality_metrics_update_interval_seconds">Air quality metrics update interval</string>
     <string name="air_quality_icon">Air quality icon</string>
     <string name="power_metrics_module_enabled">Power metrics module enabled</string>
-    <string name="power_metrics_update_interval_seconds">Power metrics update interval (seconds)</string>
+    <string name="power_metrics_update_interval_seconds">Power metrics update interval</string>
     <string name="power_metrics_on_screen_enabled">Power metrics on-screen enabled</string>
     <string name="user_config">User Config</string>
     <string name="node_id">ID węzła</string>
@@ -898,4 +908,6 @@
     <string name="analytics_notice">Analytics are collected to help us improve the Android app (thank you), we will receive anonymized information about user behavior. This includes crash reports, screens used in the app, etc.</string>
     <string name="analytics_platforms">"Analytics platforms: "</string>
     <string name="for_more_information_see_our_privacy_policy">For more information, see our privacy policy.</string>
+    <string name="unset">Unset - 0</string>
+    <string name="relayed_by">Relayed by: %s</string>
 </resources>

@@ -44,31 +44,32 @@ import androidx.compose.ui.unit.dp
 import org.meshtastic.core.database.model.Node
 import org.meshtastic.core.model.util.formatAgo
 import org.meshtastic.core.model.util.formatUptime
-import org.meshtastic.core.strings.R
-import org.meshtastic.core.ui.component.SettingsItemDetail
+import org.meshtastic.core.ui.component.InsetDivider
+import org.meshtastic.core.ui.component.ListItem
 import org.meshtastic.core.ui.component.TitledCard
 import org.meshtastic.feature.node.model.isEffectivelyUnmessageable
+import org.meshtastic.core.strings.R as Res
 
 @Composable
 fun NodeDetailsSection(node: Node, modifier: Modifier = Modifier) {
-    TitledCard(title = stringResource(R.string.details), modifier = modifier) {
+    TitledCard(title = stringResource(Res.string.details), modifier = modifier) {
         if (node.mismatchKey) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.KeyOff,
-                    contentDescription = stringResource(id = R.string.encryption_error),
+                    contentDescription = stringResource(Res.string.encryption_error),
                     tint = Color.Red,
                 )
                 Spacer(Modifier.width(12.dp))
                 Text(
-                    text = stringResource(id = R.string.encryption_error),
+                    text = stringResource(Res.string.encryption_error),
                     style = MaterialTheme.typography.titleLarge.copy(color = Color.Red),
                     textAlign = TextAlign.Center,
                 )
             }
             Spacer(Modifier.height(16.dp))
             Text(
-                text = stringResource(id = R.string.encryption_error_text),
+                text = stringResource(Res.string.encryption_error_text),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
             )
@@ -80,48 +81,79 @@ fun NodeDetailsSection(node: Node, modifier: Modifier = Modifier) {
 
 @Composable
 private fun MainNodeDetails(node: Node) {
-    SettingsItemDetail(
-        text = stringResource(R.string.long_name),
-        icon = Icons.TwoTone.Person,
+    ListItem(
+        text = stringResource(Res.string.long_name),
+        leadingIcon = Icons.TwoTone.Person,
         supportingText = node.user.longName.ifEmpty { "???" },
+        copyable = true,
+        trailingIcon = null,
     )
-    SettingsItemDetail(
-        text = stringResource(R.string.short_name),
-        icon = Icons.Outlined.Person,
+
+    InsetDivider()
+
+    ListItem(
+        text = stringResource(Res.string.short_name),
+        leadingIcon = Icons.Outlined.Person,
         supportingText = node.user.shortName.ifEmpty { "???" },
+        copyable = true,
+        trailingIcon = null,
     )
-    SettingsItemDetail(
-        text = stringResource(R.string.node_number),
-        icon = Icons.Default.Numbers,
+
+    InsetDivider()
+
+    ListItem(
+        text = stringResource(Res.string.node_number),
+        leadingIcon = Icons.Default.Numbers,
         supportingText = node.num.toUInt().toString(),
+        copyable = true,
+        trailingIcon = null,
     )
-    SettingsItemDetail(
-        text = stringResource(R.string.user_id),
-        icon = Icons.Default.Person,
+
+    InsetDivider()
+
+    ListItem(
+        text = stringResource(Res.string.user_id),
+        leadingIcon = Icons.Default.Person,
         supportingText = node.user.id,
+        copyable = true,
+        trailingIcon = null,
     )
-    SettingsItemDetail(
-        text = stringResource(R.string.role),
-        icon = Icons.Default.Work,
+
+    InsetDivider()
+
+    ListItem(
+        text = stringResource(Res.string.role),
+        leadingIcon = Icons.Default.Work,
         supportingText = node.user.role.name,
+        trailingIcon = null,
     )
+
     if (node.isEffectivelyUnmessageable) {
-        SettingsItemDetail(
-            text = stringResource(R.string.unmonitored_or_infrastructure),
-            icon = Icons.Outlined.NoCell,
-            supportingText = null,
+        InsetDivider()
+
+        ListItem(
+            text = stringResource(Res.string.unmonitored_or_infrastructure),
+            leadingIcon = Icons.Outlined.NoCell,
+            trailingIcon = null,
         )
     }
     if (node.deviceMetrics.uptimeSeconds > 0) {
-        SettingsItemDetail(
-            text = stringResource(R.string.uptime),
-            icon = Icons.Default.CheckCircle,
+        InsetDivider()
+
+        ListItem(
+            text = stringResource(Res.string.uptime),
+            leadingIcon = Icons.Default.CheckCircle,
             supportingText = formatUptime(node.deviceMetrics.uptimeSeconds),
+            trailingIcon = null,
         )
     }
-    SettingsItemDetail(
-        text = stringResource(R.string.node_sort_last_heard),
-        icon = Icons.Default.History,
+
+    InsetDivider()
+
+    ListItem(
+        text = stringResource(Res.string.node_sort_last_heard),
+        leadingIcon = Icons.Default.History,
         supportingText = formatAgo(node.lastHeard),
+        trailingIcon = null,
     )
 }

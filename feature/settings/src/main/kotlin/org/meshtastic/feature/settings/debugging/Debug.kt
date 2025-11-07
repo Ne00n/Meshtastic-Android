@@ -19,7 +19,6 @@ package org.meshtastic.feature.settings.debugging
 
 import android.content.Context
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
@@ -81,12 +80,12 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.meshtastic.core.strings.R
 import org.meshtastic.core.ui.component.CopyIconButton
 import org.meshtastic.core.ui.component.MainAppBar
 import org.meshtastic.core.ui.component.SimpleAlertDialog
 import org.meshtastic.core.ui.theme.AnnotationColor
 import org.meshtastic.core.ui.theme.AppTheme
+import org.meshtastic.core.ui.util.showToast
 import org.meshtastic.feature.settings.debugging.DebugViewModel.UiMeshLog
 import timber.log.Timber
 import java.io.IOException
@@ -95,6 +94,7 @@ import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import org.meshtastic.core.strings.R as Res
 
 private val REGEX_ANNOTATED_NODE_ID = Regex("\\(![0-9a-fA-F]{8}\\)$", RegexOption.MULTILINE)
 
@@ -103,7 +103,7 @@ private var redactedKeys: List<String> = listOf("session_passkey", "private_key"
 
 @Suppress("LongMethod")
 @Composable
-internal fun DebugScreen(onNavigateUp: () -> Unit, viewModel: DebugViewModel = hiltViewModel()) {
+fun DebugScreen(onNavigateUp: () -> Unit, viewModel: DebugViewModel = hiltViewModel()) {
     val listState = rememberLazyListState()
     val logs by viewModel.meshLog.collectAsStateWithLifecycle()
     val searchState by viewModel.searchState.collectAsStateWithLifecycle()
@@ -147,7 +147,7 @@ internal fun DebugScreen(onNavigateUp: () -> Unit, viewModel: DebugViewModel = h
     Scaffold(
         topBar = {
             MainAppBar(
-                title = stringResource(R.string.debug_panel),
+                title = stringResource(Res.string.debug_panel),
                 ourNode = null,
                 showNodeChip = false,
                 canNavigateUp = true,
@@ -349,12 +349,12 @@ fun DebugMenuActions(deleteLogs: () -> Unit, modifier: Modifier = Modifier) {
     var showDeleteLogsDialog by remember { mutableStateOf(false) }
 
     IconButton(onClick = { showDeleteLogsDialog = true }, modifier = modifier.padding(4.dp)) {
-        Icon(imageVector = Icons.Default.Delete, contentDescription = stringResource(id = R.string.debug_clear))
+        Icon(imageVector = Icons.Default.Delete, contentDescription = stringResource(Res.string.debug_clear))
     }
     if (showDeleteLogsDialog) {
         SimpleAlertDialog(
-            title = R.string.debug_clear,
-            text = R.string.debug_clear_logs_confirm,
+            title = Res.string.debug_clear,
+            text = Res.string.debug_clear_logs_confirm,
             onConfirm = {
                 showDeleteLogsDialog = false
                 deleteLogs()
@@ -396,19 +396,9 @@ private suspend fun exportAllLogsToUri(context: Context, targetUri: Uri, logs: L
                 }
             } ?: run { throw IOException("Unable to open output stream for URI: $targetUri") }
 
-            withContext(Dispatchers.Main) {
-                Toast.makeText(context, context.getString(R.string.debug_export_success, logs.size), Toast.LENGTH_LONG)
-                    .show()
-            }
+            withContext(Dispatchers.Main) { context.showToast(Res.string.debug_export_success, logs.size) }
         } catch (e: IOException) {
-            withContext(Dispatchers.Main) {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.debug_export_failed, e.message ?: ""),
-                    Toast.LENGTH_LONG,
-                )
-                    .show()
-            }
+            withContext(Dispatchers.Main) { context.showToast(Res.string.debug_export_failed, e.message ?: "") }
             Timber.w(e, "Error:IOException ")
         }
     }
@@ -426,7 +416,7 @@ private fun DecodedPayloadBlock(
 
     Column(modifier = modifier) {
         Text(
-            text = stringResource(id = R.string.debug_decoded_payload),
+            text = stringResource(Res.string.debug_decoded_payload),
             style = commonTextStyle,
             modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
         )
@@ -595,11 +585,11 @@ private fun DebugMenuActionsPreview() {
             IconButton(onClick = { /* Preview only */ }, modifier = Modifier.padding(4.dp)) {
                 Icon(
                     imageVector = Icons.Outlined.FileDownload,
-                    contentDescription = stringResource(id = R.string.debug_logs_export),
+                    contentDescription = stringResource(Res.string.debug_logs_export),
                 )
             }
             IconButton(onClick = { /* Preview only */ }, modifier = Modifier.padding(4.dp)) {
-                Icon(imageVector = Icons.Default.Delete, contentDescription = stringResource(id = R.string.debug_clear))
+                Icon(imageVector = Icons.Default.Delete, contentDescription = stringResource(Res.string.debug_clear))
             }
         }
     }
@@ -637,7 +627,7 @@ private fun DebugScreenEmptyPreview() {
                                             Text(text = "Filters", style = TextStyle(fontWeight = FontWeight.Bold))
                                             Icon(
                                                 imageVector = Icons.TwoTone.FilterAltOff,
-                                                contentDescription = stringResource(id = R.string.debug_filters),
+                                                contentDescription = stringResource(Res.string.debug_filters),
                                             )
                                         }
                                     }

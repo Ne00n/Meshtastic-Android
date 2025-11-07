@@ -22,7 +22,6 @@ import android.provider.Settings
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.coroutineScope
 import com.geeksville.mesh.BuildConfig
-import com.geeksville.mesh.CoroutineDispatchers
 import com.geeksville.mesh.android.BinaryLogFile
 import com.geeksville.mesh.android.BuildUtils
 import com.geeksville.mesh.concurrent.handledLaunch
@@ -45,6 +44,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.meshtastic.core.analytics.platform.PlatformAnalytics
+import org.meshtastic.core.di.CoroutineDispatchers
 import org.meshtastic.core.model.util.anonymize
 import org.meshtastic.core.prefs.radio.RadioPrefs
 import org.meshtastic.core.service.ConnectionState
@@ -87,6 +87,13 @@ constructor(
     private val _currentDeviceAddressFlow = MutableStateFlow(radioPrefs.devAddr)
     val currentDeviceAddressFlow: StateFlow<String?> = _currentDeviceAddressFlow.asStateFlow()
 
+    private val _isRssiPollingEnabled = MutableStateFlow(false)
+    val isRssiPollingEnabled: StateFlow<Boolean> = _isRssiPollingEnabled.asStateFlow()
+
+    fun setRssiPolling(enabled: Boolean) {
+        _isRssiPollingEnabled.value = enabled
+    }
+
     private val logSends = false
     private val logReceives = false
     private lateinit var sentPacketsLog: BinaryLogFile
@@ -98,10 +105,6 @@ constructor(
     var serviceScope = CoroutineScope(Dispatchers.IO + Job())
 
     private var radioIf: IRadioInterface = NopInterface("")
-
-    // Expose current bluetooth RSSI (null if not connected or not BLE)
-    private val _bluetoothRssi = MutableStateFlow<Int?>(null)
-    val bluetoothRssi: StateFlow<Int?> = _bluetoothRssi.asStateFlow()
 
     /**
      * true if we have started our interface
@@ -115,7 +118,7 @@ constructor(
             .onEach { state ->
                 if (state.enabled) {
                     startInterface()
-                } else if (radioIf is BluetoothInterface) {
+                } else if (radioIf is NordicBleInterface) {
                     stopInterface()
                 }
             }
@@ -218,9 +221,22 @@ constructor(
 
     // Handle an incoming packet from the radio, broadcasts it as an android intent
     fun handleFromRadio(p: ByteArray) {
+        Timber.d(
+            "RadioInterfaceService.handleFromRadio called with ${p.size} bytes: ${p.joinToString(
+                prefix = "[",
+                postfix = "]",
+            ) { b ->
+                String.format("0x%02x", b)
+            }}",
+        )
+
         if (logReceives) {
-            receivedPacketsLog.write(p)
-            receivedPacketsLog.flush()
+            try {
+                receivedPacketsLog.write(p)
+                receivedPacketsLog.flush()
+            } catch (t: Throwable) {
+                Timber.w(t, "Failed to write receive log in handleFromRadio")
+            }
         }
 
         if (radioIf is SerialInterface) {
@@ -229,8 +245,13 @@ constructor(
 
         // ignoreException { Timber.d("FromRadio: ${MeshProtos.FromRadio.parseFrom(p)}") }
 
-        processLifecycle.coroutineScope.launch(dispatchers.io) { _receivedData.emit(p) }
-        emitReceiveActivity()
+        try {
+            processLifecycle.coroutineScope.launch(dispatchers.io) { _receivedData.emit(p) }
+            emitReceiveActivity()
+            Timber.d("RadioInterfaceService.handleFromRadio dispatched successfully")
+        } catch (t: Throwable) {
+            Timber.e(t, "RadioInterfaceService.handleFromRadio failed while emitting data")
+        }
     }
 
     fun onConnect() {
@@ -266,13 +287,6 @@ constructor(
                 }
 
                 radioIf = interfaceFactory.createInterface(address)
-
-                // If the new interface is bluetooth, collect its RSSI flow
-                if (radioIf is BluetoothInterface) {
-                    (radioIf as BluetoothInterface).rssiFlow.onEach { _bluetoothRssi.emit(it) }.launchIn(serviceScope)
-                } else {
-                    _bluetoothRssi.value = null
-                }
             }
         }
     }
@@ -299,7 +313,6 @@ constructor(
         if (r !is NopInterface) {
             onDisconnect(isPermanent = true) // Tell any clients we are now offline
         }
-        _bluetoothRssi.value = null
     }
 
     /**
@@ -308,7 +321,7 @@ constructor(
      * @return true if the device changed, false if no change
      */
     private fun setBondedDeviceAddress(address: String?): Boolean =
-        if (getBondedDeviceAddress() == address && isStarted) {
+        if (getBondedDeviceAddress() == address && isStarted && _connectionState.value == ConnectionState.CONNECTED) {
             Timber.w("Ignoring setBondedDevice ${address.anonymize}, because we are already using that device")
             false
         } else {

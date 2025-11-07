@@ -136,7 +136,7 @@ jobs:
         run: bundle exec fastlane fdroid_build
 
       - name: Upload F-Droid APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: fdroid-apk
           path: app/build/outputs/apk/fdroid/release/app-fdroid-release.apk
@@ -152,7 +152,7 @@ jobs:
     needs: [prepare-build-info, release-fdroid]
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: ./artifacts
 

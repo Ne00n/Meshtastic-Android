@@ -44,12 +44,13 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import org.meshtastic.core.model.DeviceHardware
-import org.meshtastic.core.strings.R
-import org.meshtastic.core.ui.component.SettingsItemDetail
+import org.meshtastic.core.ui.component.InsetDivider
+import org.meshtastic.core.ui.component.ListItem
 import org.meshtastic.core.ui.component.TitledCard
 import org.meshtastic.core.ui.theme.StatusColors.StatusGreen
 import org.meshtastic.core.ui.theme.StatusColors.StatusRed
 import org.meshtastic.feature.node.model.MetricsState
+import org.meshtastic.core.strings.R as Res
 
 @Composable
 fun DeviceDetailsSection(state: MetricsState, modifier: Modifier = Modifier) {
@@ -57,7 +58,9 @@ fun DeviceDetailsSection(state: MetricsState, modifier: Modifier = Modifier) {
     val deviceHardware = state.deviceHardware ?: return
     val hwModelName = deviceHardware.displayName
     val isSupported = deviceHardware.activelySupported
-    TitledCard(stringResource(R.string.device), modifier = modifier) {
+    TitledCard(stringResource(Res.string.device), modifier = modifier) {
+        Spacer(modifier = Modifier.height(16.dp))
+
         Box(
             modifier =
             Modifier.align(Alignment.CenterHorizontally)
@@ -71,26 +74,33 @@ fun DeviceDetailsSection(state: MetricsState, modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        SettingsItemDetail(
-            text = stringResource(R.string.hardware),
-            icon = Icons.Default.Router,
+        InsetDivider()
+
+        ListItem(
+            text = stringResource(Res.string.hardware),
+            leadingIcon = Icons.Default.Router,
             supportingText = hwModelName,
+            copyable = true,
+            trailingIcon = null,
         )
-        SettingsItemDetail(
+
+        InsetDivider()
+
+        ListItem(
             text =
             if (isSupported) {
-                stringResource(R.string.supported)
+                stringResource(Res.string.supported)
             } else {
-                stringResource(R.string.supported_by_community)
+                stringResource(Res.string.supported_by_community)
             },
-            icon =
+            leadingIcon =
             if (isSupported) {
                 Icons.TwoTone.Verified
             } else {
                 ImageVector.vectorResource(org.meshtastic.feature.node.R.drawable.unverified)
             },
-            supportingText = null,
-            iconTint = if (isSupported) colorScheme.StatusGreen else colorScheme.StatusRed,
+            leadingIconTint = if (isSupported) colorScheme.StatusGreen else colorScheme.StatusRed,
+            trailingIcon = null,
         )
     }
 }

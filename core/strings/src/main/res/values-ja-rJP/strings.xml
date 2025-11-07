@@ -95,6 +95,7 @@
     <string name="config_device_tripleClickAsAdHocPing_summary">Send a position on the primary channel when the user button is triple clicked.</string>
     <string name="config_device_ledHeartbeatEnabled_summary">デバイスの点滅するLEDを制御します。ほとんどのデバイスでは、最大4つあるLEDのうちの1つを制御します。充電用LEDとGPS用LEDは制御できません。</string>
     <string name="config_device_tzdef_summary">Time zone for dates on the device screen and log.</string>
+    <string name="config_device_use_phone_tz">Use phone time zone</string>
     <string name="config_device_transmitOverLora_summary">近隣ノード情報(NeighborInfo)をMQTTやPhoneAPIへ送信することに加えて、LoRa無線経由でも送信すべきかどうかを設定します。デフォルトの名前とキーが設定されたチャンネルでは利用できません。</string>
     <string name="config_display_screen_on_secs_summary">How long the screen remains on after the user button is pressed or messages are received.</string>
     <string name="config_display_auto_screen_carousel_secs_summary">Automatically toggles to the next page on the screen like a carousel, based the specified interval.</string>
@@ -180,6 +181,9 @@
     <string name="connected">Connected</string>
     <string name="connected_to">Meshtasticデバイスに接続しました
 (%s)</string>
+    <string name="connection_status">Current connections:</string>
+    <string name="wifi_ip">Wifi IP:</string>
+    <string name="ethernet_ip">Ethernet IP:</string>
     <string name="not_connected">接続されていません</string>
     <string name="connected_sleeping">接続しましたが、Meshtasticデバイスはスリープ状態です。</string>
     <string name="app_too_old">アプリを更新して下さい。</string>
@@ -309,6 +313,11 @@
     <string name="mute_8_hours">8時間</string>
     <string name="mute_1_week">1週間</string>
     <string name="mute_always">常時</string>
+    <string name="currently">Currently:</string>
+    <string name="mute_status_always">Always muted</string>
+    <string name="mute_status_unmuted">Not muted</string>
+    <string name="mute_status_muted_for_days">Muted for %1d days, %.1f hours</string>
+    <string name="mute_status_muted_for_hours">Muted for %.1f hours</string>
     <string name="replace">置き換え</string>
     <string name="wifi_qr_code_scan">WiFiのQRコードをスキャン</string>
     <string name="wifi_qr_code_error">WiFi認証のQRコードの形式が無効です</string>
@@ -327,6 +336,7 @@
     <string name="ch_util_definition">現在のチャンネルの使用率。正常な送信（TX）、正常な受信（RX）、および不正な受信 (ノイズ)を含みます。</string>
     <string name="air_util_definition">過去1時間以内に送信に使用された通信時間の割合。</string>
     <string name="iaq">IAQ</string>
+    <string name="show_all_key_title">Encryption Key Meanings</string>
     <string name="encryption_psk">共有キー</string>
     <string name="encryption_psk_text">Only channel messages can be sent/received. Direct Messages require the Public Key Infrastructure feature in 2.5+ firmware.</string>
     <string name="encryption_pkc">公開キー暗号化</string>
@@ -588,10 +598,10 @@
     <string name="shutdown_on_battery_delay_seconds">外部電源喪失後の自動シャットダウンまでの待機時間（秒）</string>
     <string name="adc_multiplier_override">ADC multiplier override</string>
     <string name="adc_multiplier_override_ratio">ADC乗算器のオーバーライド率</string>
-    <string name="wait_for_bluetooth_duration_seconds">一定時間Bluetooth未接続で自動的にオフ（秒）</string>
-    <string name="super_deep_sleep_duration_seconds">スーパーディープスリープモード（秒）</string>
-    <string name="light_sleep_duration_seconds">ライトスリープモード (秒)</string>
-    <string name="minimum_wake_time_seconds">最小ウェイクタイム (秒)</string>
+    <string name="wait_for_bluetooth_duration_seconds">Wait for Bluetooth duration</string>
+    <string name="super_deep_sleep_duration_seconds">Super deep sleep duration</string>
+    <string name="light_sleep_duration_seconds">Light sleep duration</string>
+    <string name="minimum_wake_time_seconds">Minimum wake time</string>
     <string name="battery_ina_2xx_i2c_address">バッテリー INA_2XX I2C アドレス</string>
     <string name="range_test_config">レンジテスト設定</string>
     <string name="range_test_enabled">レンジテストを有効化</string>
@@ -625,16 +635,16 @@
     <string name="history_return_window">リクエスト可能な履歴の期間  (分)</string>
     <string name="server">サーバー</string>
     <string name="telemetry_config">テレメトリー設定</string>
-    <string name="device_metrics_update_interval_seconds">デバイスのメトリック更新間隔 (秒)</string>
-    <string name="environment_metrics_update_interval_seconds">環境メトリック更新間隔 (秒)</string>
+    <string name="device_metrics_update_interval_seconds">Device metrics update interval</string>
+    <string name="environment_metrics_update_interval_seconds">Environment metrics update interval</string>
     <string name="environment_metrics_module_enabled">環境メトリックモジュールを有効化</string>
     <string name="environment_metrics_on_screen_enabled">環境メトリックを画面上で有効化</string>
     <string name="environment_metrics_use_fahrenheit">環境メトリックは華氏を使用</string>
     <string name="air_quality_metrics_module_enabled">空気品質測定モジュールを有効化</string>
-    <string name="air_quality_metrics_update_interval_seconds">空気品質指標更新間隔 (秒)</string>
+    <string name="air_quality_metrics_update_interval_seconds">Air quality metrics update interval</string>
     <string name="air_quality_icon">Air quality icon</string>
     <string name="power_metrics_module_enabled">電源メトリックモジュール有効</string>
-    <string name="power_metrics_update_interval_seconds">電源メトリックの更新間隔 (秒)</string>
+    <string name="power_metrics_update_interval_seconds">Power metrics update interval</string>
     <string name="power_metrics_on_screen_enabled">電源メトリックを画面上で有効化</string>
     <string name="user_config">ユーザー設定</string>
     <string name="node_id">ノード ID</string>
@@ -893,4 +903,6 @@
     <string name="analytics_notice">Analytics are collected to help us improve the Android app (thank you), we will receive anonymized information about user behavior. This includes crash reports, screens used in the app, etc.</string>
     <string name="analytics_platforms">"Analytics platforms: "</string>
     <string name="for_more_information_see_our_privacy_policy">For more information, see our privacy policy.</string>
+    <string name="unset">Unset - 0</string>
+    <string name="relayed_by">Relayed by: %s</string>
 </resources>

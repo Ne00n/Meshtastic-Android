@@ -27,7 +27,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.meshtastic.core.strings.R
 import org.meshtastic.core.ui.component.DropDownPreference
 import org.meshtastic.core.ui.component.SignedIntegerEditTextPreference
 import org.meshtastic.core.ui.component.SwitchPreference
@@ -37,6 +36,7 @@ import org.meshtastic.feature.settings.util.IntervalConfiguration
 import org.meshtastic.feature.settings.util.toDisplayString
 import org.meshtastic.proto.copy
 import org.meshtastic.proto.moduleConfig
+import org.meshtastic.core.strings.R as Res
 
 @Composable
 fun PaxcounterConfigScreen(viewModel: RadioConfigViewModel = hiltViewModel(), onBack: () -> Unit) {
@@ -46,7 +46,7 @@ fun PaxcounterConfigScreen(viewModel: RadioConfigViewModel = hiltViewModel(), on
     val focusManager = LocalFocusManager.current
 
     RadioConfigScreenList(
-        title = stringResource(id = R.string.paxcounter),
+        title = stringResource(Res.string.paxcounter),
         onBack = onBack,
         configState = formState,
         enabled = state.connected,
@@ -58,9 +58,9 @@ fun PaxcounterConfigScreen(viewModel: RadioConfigViewModel = hiltViewModel(), on
         },
     ) {
         item {
-            TitledCard(title = stringResource(R.string.paxcounter_config)) {
+            TitledCard(title = stringResource(Res.string.paxcounter_config)) {
                 SwitchPreference(
-                    title = stringResource(R.string.paxcounter_enabled),
+                    title = stringResource(Res.string.paxcounter_enabled),
                     checked = formState.value.enabled,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { this.enabled = it } },
@@ -69,7 +69,7 @@ fun PaxcounterConfigScreen(viewModel: RadioConfigViewModel = hiltViewModel(), on
                 HorizontalDivider()
                 val items = remember { IntervalConfiguration.PAX_COUNTER.allowedIntervals }
                 DropDownPreference(
-                    title = stringResource(R.string.update_interval_seconds),
+                    title = stringResource(Res.string.update_interval_seconds),
                     selectedItem = formState.value.paxcounterUpdateInterval.toLong(),
                     enabled = state.connected,
                     items = items.map { it.value to it.toDisplayString() },
@@ -79,7 +79,7 @@ fun PaxcounterConfigScreen(viewModel: RadioConfigViewModel = hiltViewModel(), on
                 )
                 HorizontalDivider()
                 SignedIntegerEditTextPreference(
-                    title = stringResource(R.string.wifi_rssi_threshold_defaults_to_80),
+                    title = stringResource(Res.string.wifi_rssi_threshold_defaults_to_80),
                     value = formState.value.wifiThreshold,
                     enabled = state.connected,
                     keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
@@ -87,7 +87,7 @@ fun PaxcounterConfigScreen(viewModel: RadioConfigViewModel = hiltViewModel(), on
                 )
                 HorizontalDivider()
                 SignedIntegerEditTextPreference(
-                    title = stringResource(R.string.ble_rssi_threshold_defaults_to_80),
+                    title = stringResource(Res.string.ble_rssi_threshold_defaults_to_80),
                     value = formState.value.bleThreshold,
                     enabled = state.connected,
                     keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),

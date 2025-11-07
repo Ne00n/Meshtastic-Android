@@ -95,6 +95,7 @@
     <string name="config_device_tripleClickAsAdHocPing_summary">Отправлять позицию на основной канал по тройному нажатию кнопки.</string>
     <string name="config_device_ledHeartbeatEnabled_summary">Управляет мигающим светодиодом на устройстве. Для большинства устройств это будет управлять одним из до 4 светодиодов, зарядное устройство и GPS светодиоды не управляются.</string>
     <string name="config_device_tzdef_summary">Часовой пояс дат на экране и журнале устройства.</string>
+    <string name="config_device_use_phone_tz">Use phone time zone</string>
     <string name="config_device_transmitOverLora_summary">В дополнение к отправке на MQTT и PhoneAPI, наши NeighborInfo должны быть переданы через LoRa. Недоступно на канале с ключом и именем по умолчанию.</string>
     <string name="config_display_screen_on_secs_summary">Как долго экран остается включенным после нажатия пользовательской кнопки или получения сообщений.</string>
     <string name="config_display_auto_screen_carousel_secs_summary">Автоматически переключает на следующую страницу на экране как карусель, основываясь на заданном интервале.</string>
@@ -179,6 +180,9 @@
     <string name="ip_port">Порт:</string>
     <string name="connected">Подключено</string>
     <string name="connected_to">Подключен к радиостанции (%s)</string>
+    <string name="connection_status">Current connections:</string>
+    <string name="wifi_ip">Wifi IP:</string>
+    <string name="ethernet_ip">Ethernet IP:</string>
     <string name="not_connected">Нет соединения</string>
     <string name="connected_sleeping">Подключен к радиостанции, но она спит</string>
     <string name="app_too_old">Требуется обновление приложения</string>
@@ -311,6 +315,11 @@
     <string name="mute_8_hours">8 часов</string>
     <string name="mute_1_week">1 неделя</string>
     <string name="mute_always">Всегда</string>
+    <string name="currently">Currently:</string>
+    <string name="mute_status_always">Always muted</string>
+    <string name="mute_status_unmuted">Not muted</string>
+    <string name="mute_status_muted_for_days">Muted for %1d days, %.1f hours</string>
+    <string name="mute_status_muted_for_hours">Muted for %.1f hours</string>
     <string name="replace">Заменить</string>
     <string name="wifi_qr_code_scan">Сканировать QR-код WiFi</string>
     <string name="wifi_qr_code_error">Неверный формат QR-кода WiFi</string>
@@ -329,6 +338,7 @@
     <string name="ch_util_definition">Использование для текущего канала, включая хорошо сформированный TX, RX и неправильно сформированный RX (так называемый шум).</string>
     <string name="air_util_definition">Процент времени эфира для передачи в течение последнего часа.</string>
     <string name="iaq">Относительное качество воздуха в помещении</string>
+    <string name="show_all_key_title">Encryption Key Meanings</string>
     <string name="encryption_psk">Общедоступный ключ</string>
     <string name="encryption_psk_text">Only channel messages can be sent/received. Direct Messages require the Public Key Infrastructure feature in 2.5+ firmware.</string>
     <string name="encryption_pkc">Общий ключ шифрования</string>
@@ -593,10 +603,10 @@
     <string name="shutdown_on_battery_delay_seconds">Задержка выключения в режиме батареи (в секундах)</string>
     <string name="adc_multiplier_override">Коэффициент переопределения ADC</string>
     <string name="adc_multiplier_override_ratio">Коэффициент переопределения ADC</string>
-    <string name="wait_for_bluetooth_duration_seconds">Длительность ожидания Bluetooth (в секундах)</string>
-    <string name="super_deep_sleep_duration_seconds">Длительность супер глубокого сна (в секундах)</string>
-    <string name="light_sleep_duration_seconds">Длительность легкого сна (в секундах)</string>
-    <string name="minimum_wake_time_seconds">Минимальное время пробуждения (в секундах)</string>
+    <string name="wait_for_bluetooth_duration_seconds">Длительность ожидания Bluetooth</string>
+    <string name="super_deep_sleep_duration_seconds">Super deep sleep duration</string>
+    <string name="light_sleep_duration_seconds">Light sleep duration</string>
+    <string name="minimum_wake_time_seconds">Minimum wake time</string>
     <string name="battery_ina_2xx_i2c_address">I2C-адрес INA_2XX батареи</string>
     <string name="range_test_config">Настройка проверки дальности</string>
     <string name="range_test_enabled">Проверка дальности включена</string>
@@ -630,16 +640,16 @@
     <string name="history_return_window">Окно возврата истории</string>
     <string name="server">Сервер</string>
     <string name="telemetry_config">Настройка телеметрии</string>
-    <string name="device_metrics_update_interval_seconds">Интервал обновления метрик устройства (в секундах)</string>
-    <string name="environment_metrics_update_interval_seconds">Интервал обновления метрик окружения (в секундах)</string>
+    <string name="device_metrics_update_interval_seconds">Device metrics update interval</string>
+    <string name="environment_metrics_update_interval_seconds">Environment metrics update interval</string>
     <string name="environment_metrics_module_enabled">Модуль метрик окружения включен</string>
     <string name="environment_metrics_on_screen_enabled">Показатели окружения на экране включены</string>
     <string name="environment_metrics_use_fahrenheit">Использовать метрику окружения в Fahrenheit</string>
     <string name="air_quality_metrics_module_enabled">Модуль измерения качества воздуха включен</string>
-    <string name="air_quality_metrics_update_interval_seconds">Интервал обновления показателей качества воздуха (в секундах)</string>
+    <string name="air_quality_metrics_update_interval_seconds">Air quality metrics update interval</string>
     <string name="air_quality_icon">Значок качества воздуха</string>
     <string name="power_metrics_module_enabled">Модуль метрик питания включен</string>
-    <string name="power_metrics_update_interval_seconds">Интервал обновления метрик питания (в секундах)</string>
+    <string name="power_metrics_update_interval_seconds">Power metrics update interval</string>
     <string name="power_metrics_on_screen_enabled">Включить метрики питания на экране</string>
     <string name="user_config">Настройки пользователя</string>
     <string name="node_id">ID узла</string>
@@ -898,4 +908,6 @@
     <string name="analytics_notice">Analytics are collected to help us improve the Android app (thank you), we will receive anonymized information about user behavior. This includes crash reports, screens used in the app, etc.</string>
     <string name="analytics_platforms">"Analytics platforms: "</string>
     <string name="for_more_information_see_our_privacy_policy">For more information, see our privacy policy.</string>
+    <string name="unset">Unset - 0</string>
+    <string name="relayed_by">Relayed by: %s</string>
 </resources>

@@ -95,6 +95,7 @@
     <string name="config_device_tripleClickAsAdHocPing_summary">Saada asukoht põhikanalil, kui klõpsatakse kasutaja nuppu kolm korda.</string>
     <string name="config_device_ledHeartbeatEnabled_summary">Juhib seadme vilkuvaid LED. Enamiku seadmete puhul juhib see ühe kuni 4 LED, laadija ja GPS LED ei ole juhitavad.</string>
     <string name="config_device_tzdef_summary">Seadme ekraanil ja logis kuvatavate kuupäevade ajavöönd.</string>
+    <string name="config_device_use_phone_tz">Kasuta telefoni ajavööndit</string>
     <string name="config_device_transmitOverLora_summary">Lisaks MQTT-le ja PhoneAPI-le saatmisele peaks meie NeighborInfo edastama ka LoRa kaudu. Ei tööta vaikimisi võtme ja - nimega kanalil.</string>
     <string name="config_display_screen_on_secs_summary">Kui kaua ekraan pärast nupu vajutamist või sõnumite vastuvõtmist sisse lülitatuks jääb.</string>
     <string name="config_display_auto_screen_carousel_secs_summary">Läheb automaatselt ekraani järgmisele lehele nagu karussell, vastavalt määratud intervallile.</string>
@@ -112,7 +113,7 @@
     <string name="label_very_long_slow">Väga pikk ulatus- aeglane</string>
     <string name="label_long_fast">Pikk ulatus - kiire</string>
     <string name="label_long_moderate">Pikk ulatus - mõõdukas</string>
-    <string name="label_long_slow">Pikk ulatus - aeglame</string>
+    <string name="label_long_slow">Pikk ulatus - aeglane</string>
     <string name="label_medium_fast">Keskmine ulatus - kiire</string>
     <string name="label_medium_slow">Keskmine ulatus - aeglane</string>
     <string name="label_short_turbo">Lühike ulatus - turbo</string>
@@ -159,7 +160,7 @@
     <string name="analytics_okay">Luba analüüsi ja krahhi aruandlus.</string>
     <string name="accept">Nõustu</string>
     <string name="cancel">Tühista</string>
-    <string name="discard_changes">Discard</string>
+    <string name="discard_changes">Tühista</string>
     <string name="save_changes">Salvesta</string>
     <string name="new_channel_rcvd">Uued kanalid vastu võetud</string>
     <string name="permission_missing">Meshtastic vajab sinihambaga kaudu seadmete leidmiseks asukohalubasid. Saate need keelata, kui neid ei kasutata.</string>
@@ -179,6 +180,9 @@
     <string name="ip_port">Port:</string>
     <string name="connected">Ühendatud</string>
     <string name="connected_to">Ühendatud raadioga (%s)</string>
+    <string name="connection_status">Praegused ühendused:</string>
+    <string name="wifi_ip">Wifi IP-aadress:</string>
+    <string name="ethernet_ip">Etherneti IP-aadress:</string>
     <string name="not_connected">Ei ole ühendatud</string>
     <string name="connected_sleeping">Ühendatud raadioga, aga see on unerežiimis</string>
     <string name="app_too_old">Vajalik on rakenduse värskendus</string>
@@ -309,6 +313,11 @@
     <string name="mute_8_hours">8 tundi</string>
     <string name="mute_1_week">1 nädal</string>
     <string name="mute_always">Alati</string>
+    <string name="currently">Praegu:</string>
+    <string name="mute_status_always">Alati vaigistatud</string>
+    <string name="mute_status_unmuted">Mitte vaigistatud</string>
+    <string name="mute_status_muted_for_days">Vaigistatud %1d päeva, %.1f tundi</string>
+    <string name="mute_status_muted_for_hours">Vaigistatud %.1f tundi</string>
     <string name="replace">Asenda</string>
     <string name="wifi_qr_code_scan">Skaneeri WiFi QR kood</string>
     <string name="wifi_qr_code_error">Vigane WiFi tõendi QR koodi vorming</string>
@@ -327,6 +336,7 @@
     <string name="ch_util_definition">Praeguse kanali kasutamine, sealhulgas korrektne TX, RX ja vigane RX (ehk müra).</string>
     <string name="air_util_definition">Viimase tunni jooksul kasutatud eetriaja protsent.</string>
     <string name="iaq">IAQ</string>
+    <string name="show_all_key_title">Krüpteerimisvõtmete nimed</string>
     <string name="encryption_psk">Jagatud võti</string>
     <string name="encryption_psk_text">Saata/vastuvõtta saab ainult kanali-sõnumeid. Otsesõnumid nõuavad avaliku võtme infrastruktuuri funktsiooni püsivara versioonist 2.5 alates.</string>
     <string name="encryption_pkc">Avaliku võtme krüpteerimine</string>
@@ -589,10 +599,10 @@
     <string name="shutdown_on_battery_delay_seconds">Aku viivitus väljalükkamisel (sekundit)</string>
     <string name="adc_multiplier_override">ADC kordaja tühistamine</string>
     <string name="adc_multiplier_override_ratio">Asenda ADC kordistaja suhe</string>
-    <string name="wait_for_bluetooth_duration_seconds">Sinihamba ootamine (sekundit)</string>
-    <string name="super_deep_sleep_duration_seconds">Super süvaune kestvus (sekundit)</string>
-    <string name="light_sleep_duration_seconds">Kergune kestvus (sekundit)</string>
-    <string name="minimum_wake_time_seconds">Minimaalne ärkamise aeg (sekundit)</string>
+    <string name="wait_for_bluetooth_duration_seconds">Oota Bluetoothi ​​kestust</string>
+    <string name="super_deep_sleep_duration_seconds">Super sügava une kestus</string>
+    <string name="light_sleep_duration_seconds">Kerge une kestus</string>
+    <string name="minimum_wake_time_seconds">Minimaalne ärkveloleku aeg</string>
     <string name="battery_ina_2xx_i2c_address">Aku INA_2XX I2C aadress</string>
     <string name="range_test_config">Ulatustesti sätted</string>
     <string name="range_test_enabled">Ulatustest lubatud</string>
@@ -626,16 +636,16 @@
     <string name="history_return_window">Ajalookirjete aken</string>
     <string name="server">Server</string>
     <string name="telemetry_config">Telemeetria sätted</string>
-    <string name="device_metrics_update_interval_seconds">Seadme mõõdikute värskendamise sagedus (sekundit)</string>
-    <string name="environment_metrics_update_interval_seconds">Keskkonnamõõdikute värskendamise sagedus (sekundit)</string>
+    <string name="device_metrics_update_interval_seconds">Seadme mõõdikute värskendamise intervall</string>
+    <string name="environment_metrics_update_interval_seconds">Keskkonnamõõdikute värskendamise intervall</string>
     <string name="environment_metrics_module_enabled">Keskkonnamõõdikute lubamine</string>
     <string name="environment_metrics_on_screen_enabled">Keskkonnamõõdikute ekraanil kuvamine lubatud</string>
     <string name="environment_metrics_use_fahrenheit">Keskkonnamõõdikud kasutavad Fahrenheiti</string>
     <string name="air_quality_metrics_module_enabled">Õhukvaliteedi moodul on lubatud</string>
-    <string name="air_quality_metrics_update_interval_seconds">Õhukvaliteedi värskendamise sagedus (sekundit)</string>
+    <string name="air_quality_metrics_update_interval_seconds">Õhupuhtusmõõdikute värskendamise intervall</string>
     <string name="air_quality_icon">Õhukvaliteedi ikoon</string>
     <string name="power_metrics_module_enabled">Toitemõõdiku moodul on lubatud</string>
-    <string name="power_metrics_update_interval_seconds">Toitemõõdiku värskendamise sagedus (sekundit)</string>
+    <string name="power_metrics_update_interval_seconds">Toitemõõdikute värskendamise intervall</string>
     <string name="power_metrics_on_screen_enabled">Toitemõõdiku ekraanil kuvamine lubatud</string>
     <string name="user_config">Kasutaja sätted</string>
     <string name="node_id">Sõlme ID</string>
@@ -894,4 +904,6 @@
     <string name="analytics_notice">Analüüsiandmeid kogutakse Androidi rakenduse täiustamiseks (tänan). Me saame anonüümset teavet kasutajate käitumise kohta. See hõlmab krahhiaruandeid, rakenduse ekraanipilte jms.</string>
     <string name="analytics_platforms">"Analüütika platvormid: "</string>
     <string name="for_more_information_see_our_privacy_policy">Lisateabe saamiseks vaata privaatsuspoliitikat.</string>
+    <string name="unset">Tühistatud - 0</string>
+    <string name="relayed_by">Edastaja: %s</string>
 </resources>

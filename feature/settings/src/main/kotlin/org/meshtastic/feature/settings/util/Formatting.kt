@@ -17,8 +17,13 @@
 
 package org.meshtastic.feature.settings.util
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import org.meshtastic.core.strings.R as Res
+
+@Composable
 fun FixedUpdateIntervals.toDisplayString(): String = if (this == FixedUpdateIntervals.UNSET) {
-    "Never"
+    stringResource(Res.string.unset)
 } else {
     name.split('_').joinToString(" ") { word -> word.lowercase().replaceFirstChar { it.uppercase() } }
 }

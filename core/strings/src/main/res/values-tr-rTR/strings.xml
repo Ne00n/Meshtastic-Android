@@ -95,6 +95,7 @@
     <string name="config_device_tripleClickAsAdHocPing_summary">Send a position on the primary channel when the user button is triple clicked.</string>
     <string name="config_device_ledHeartbeatEnabled_summary">Cihaz üzerindeki yanıp sönen LED\'i kontrol eder. Çoğu cihaz için bu, en fazla 4 LED\'den birini kontrol edecektir, şarj ve GPS LED\'leri kontrol edilemez.</string>
     <string name="config_device_tzdef_summary">Time zone for dates on the device screen and log.</string>
+    <string name="config_device_use_phone_tz">Use phone time zone</string>
     <string name="config_device_transmitOverLora_summary">MQTT ve PhoneAPI\'ye göndermenin yanı sıra, NeighborInfo\'muzun LoRa üzerinden iletilip iletilmeyeceğidir. Varsayılan anahtar ve ada sahip bir kanalda kullanılamaz.</string>
     <string name="config_display_screen_on_secs_summary">How long the screen remains on after the user button is pressed or messages are received.</string>
     <string name="config_display_auto_screen_carousel_secs_summary">Automatically toggles to the next page on the screen like a carousel, based the specified interval.</string>
@@ -179,6 +180,9 @@
     <string name="ip_port">Bağlantı noktası:</string>
     <string name="connected">Bağlandı</string>
     <string name="connected_to">(%s) telsizine bağlandı </string>
+    <string name="connection_status">Current connections:</string>
+    <string name="wifi_ip">Wifi IP:</string>
+    <string name="ethernet_ip">Ethernet IP:</string>
     <string name="not_connected">Bağlı değil</string>
     <string name="connected_sleeping">Cihaza bağlandı, ancak uyku durumunda</string>
     <string name="app_too_old">Uygulama güncellemesi gerekli</string>
@@ -309,6 +313,11 @@
     <string name="mute_8_hours">8 saat</string>
     <string name="mute_1_week">1 hafta</string>
     <string name="mute_always">Her zaman</string>
+    <string name="currently">Currently:</string>
+    <string name="mute_status_always">Always muted</string>
+    <string name="mute_status_unmuted">Not muted</string>
+    <string name="mute_status_muted_for_days">Muted for %1d days, %.1f hours</string>
+    <string name="mute_status_muted_for_hours">Muted for %.1f hours</string>
     <string name="replace">Değiştir</string>
     <string name="wifi_qr_code_scan">Wi-Fi QR Kodu Tara</string>
     <string name="wifi_qr_code_error">Geçersiz Wi-Fi Kimlik Bilgisi QR kodu formatı</string>
@@ -327,6 +336,7 @@
     <string name="ch_util_definition">İyi biçimlendirilmiş TX ve RX ile hatalı biçimlendirilmiş RX (gürültü) dahil olmak üzere mevcut kanal için kullanım.</string>
     <string name="air_util_definition">Son bir saat içinde kullanılan iletim için yayın süresi yüzdesi.</string>
     <string name="iaq">IAQ</string>
+    <string name="show_all_key_title">Encryption Key Meanings</string>
     <string name="encryption_psk">Paylaşılan Anahtar</string>
     <string name="encryption_psk_text">Only channel messages can be sent/received. Direct Messages require the Public Key Infrastructure feature in 2.5+ firmware.</string>
     <string name="encryption_pkc">Genel Anahtar Şifrelemesi</string>
@@ -589,10 +599,10 @@
     <string name="shutdown_on_battery_delay_seconds">Pilin kapanma gecikmesi (saniye)</string>
     <string name="adc_multiplier_override">ADC multiplier override</string>
     <string name="adc_multiplier_override_ratio">ADC çarpanını geçersiz kılma oranı</string>
-    <string name="wait_for_bluetooth_duration_seconds">Bluetooth bekleme süresi (saniye)</string>
-    <string name="super_deep_sleep_duration_seconds">Süper derin uyku süresi (saniye)</string>
-    <string name="light_sleep_duration_seconds">Hafif uyku süresi (saniye)</string>
-    <string name="minimum_wake_time_seconds">Minimum uyanma süresi (saniye)</string>
+    <string name="wait_for_bluetooth_duration_seconds">Wait for Bluetooth duration</string>
+    <string name="super_deep_sleep_duration_seconds">Super deep sleep duration</string>
+    <string name="light_sleep_duration_seconds">Light sleep duration</string>
+    <string name="minimum_wake_time_seconds">Minimum wake time</string>
     <string name="battery_ina_2xx_i2c_address">Pilin INA_2XX I2C adresi</string>
     <string name="range_test_config">Menzi Test Ayarı</string>
     <string name="range_test_enabled">Menzi testi etkin</string>
@@ -626,16 +636,16 @@
     <string name="history_return_window">Geçmiş geri dönüş penceresi</string>
     <string name="server">Sunucu</string>
     <string name="telemetry_config">Telemetri Ayarı</string>
-    <string name="device_metrics_update_interval_seconds">Cihaz metrikleri güncelleme aralığı (saniye)</string>
-    <string name="environment_metrics_update_interval_seconds">Çevre metrikleri güncelleme aralığı (saniye)</string>
+    <string name="device_metrics_update_interval_seconds">Device metrics update interval</string>
+    <string name="environment_metrics_update_interval_seconds">Environment metrics update interval</string>
     <string name="environment_metrics_module_enabled">Çevre metrikleri modülü etkin</string>
     <string name="environment_metrics_on_screen_enabled">Çevre metrikleri ekran üzerinde etkin</string>
     <string name="environment_metrics_use_fahrenheit">Çevre metrikleri Fahrenheit kullan</string>
     <string name="air_quality_metrics_module_enabled">Hava kalitesi metrikleri modülü etkin</string>
-    <string name="air_quality_metrics_update_interval_seconds">Hava kalitesi metrikleri güncelleme aralığı (saniye)</string>
+    <string name="air_quality_metrics_update_interval_seconds">Air quality metrics update interval</string>
     <string name="air_quality_icon">Hava kalitesi ikonu</string>
     <string name="power_metrics_module_enabled">Güç metrikleri modülü etkin</string>
-    <string name="power_metrics_update_interval_seconds">Güç metrikleri güncelleme aralığı (saniye)</string>
+    <string name="power_metrics_update_interval_seconds">Power metrics update interval</string>
     <string name="power_metrics_on_screen_enabled">Güç metrikleri ekran üzerinde etkin</string>
     <string name="user_config">Kullanıcı Ayarı</string>
     <string name="node_id">Düğüm ID</string>
@@ -894,4 +904,6 @@
     <string name="analytics_notice">Analytics are collected to help us improve the Android app (thank you), we will receive anonymized information about user behavior. This includes crash reports, screens used in the app, etc.</string>
     <string name="analytics_platforms">"Analytics platforms: "</string>
     <string name="for_more_information_see_our_privacy_policy">For more information, see our privacy policy.</string>
+    <string name="unset">Unset - 0</string>
+    <string name="relayed_by">Relayed by: %s</string>
 </resources>

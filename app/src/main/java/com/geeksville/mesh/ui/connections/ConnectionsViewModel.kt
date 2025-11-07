@@ -19,6 +19,7 @@ package com.geeksville.mesh.ui.connections
 
 import androidx.lifecycle.ViewModel
 import com.geeksville.mesh.repository.bluetooth.BluetoothRepository
+import com.geeksville.mesh.repository.radio.RadioInterfaceService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,10 +40,19 @@ class ConnectionsViewModel
 constructor(
     radioConfigRepository: RadioConfigRepository,
     serviceRepository: ServiceRepository,
+    private val radioInterfaceService: RadioInterfaceService,
     nodeRepository: NodeRepository,
     val bluetoothRepository: BluetoothRepository,
     private val uiPrefs: UiPrefs,
 ) : ViewModel() {
+    fun onStart() {
+        radioInterfaceService.setRssiPolling(true)
+    }
+
+    fun onStop() {
+        radioInterfaceService.setRssiPolling(false)
+    }
+
     val localConfig: StateFlow<LocalConfig> =
         radioConfigRepository.localConfigFlow.stateInWhileSubscribed(initialValue = LocalConfig.getDefaultInstance())
 
@@ -53,9 +63,6 @@ constructor(
     val ourNodeInfo: StateFlow<Node?> = nodeRepository.ourNodeInfo
 
     val bluetoothState = bluetoothRepository.state
-
-    // Newly added: bluetooth RSSI stream (dBm, null if unavailable)
-    val bluetoothRssi = serviceRepository.bluetoothRssi
 
     private val _hasShownNotPairedWarning = MutableStateFlow(uiPrefs.hasShownNotPairedWarning)
     val hasShownNotPairedWarning: StateFlow<Boolean> = _hasShownNotPairedWarning.asStateFlow()

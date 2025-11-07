@@ -95,6 +95,7 @@
     <string name="config_device_tripleClickAsAdHocPing_summary">Lähetä sijainti ensisijaisella kanavalla, kun käyttäjäpainiketta painetaan kolme kertaa.</string>
     <string name="config_device_ledHeartbeatEnabled_summary">Hallitsee laitteen vilkkuvaa LED-valoa. Useimmissa laitteissa tällä voidaan ohjata yhtä neljästä LED-valosta, mutta latauksen tai GPS:n valoja ei voi hallita.</string>
     <string name="config_device_tzdef_summary">Aikavyöhyke laitteen näytöllä ja lokissa käytettäville päivämäärille.</string>
+    <string name="config_device_use_phone_tz">Käytä puhelimen aikavyöhykettä</string>
     <string name="config_device_transmitOverLora_summary">Lähetetäänkö naapuritiedot LoRa:n kautta sen lisäksi, että ne lähetetään MQTT-protokollalla ja PhoneAPI sovellusrajapinnassa? Tämä ei ole tuettu kanavalla, joka käyttää oletussalausavainta ja nimeä.</string>
     <string name="config_display_screen_on_secs_summary">Kuinka kauan näyttö pysyy päällä sen jälkeen, kun käyttäjäpainiketta on painettu tai viestejä on vastaanotettu.</string>
     <string name="config_display_auto_screen_carousel_secs_summary">Vaihtaa automaattisesti seuraavalle näytön sivulle kuin karuselli, määritetyn aikavälin perusteella.</string>
@@ -179,6 +180,9 @@
     <string name="ip_port">Portti:</string>
     <string name="connected">Yhdistetty</string>
     <string name="connected_to">Yhdistetty radioon (%s)</string>
+    <string name="connection_status">Aktiiviset yhteydet:</string>
+    <string name="wifi_ip">WiFi-verkon IP:</string>
+    <string name="ethernet_ip">Ethernet-verkon IP:</string>
     <string name="not_connected">Ei yhdistetty</string>
     <string name="connected_sleeping">Yhdistetty radioon, mutta se on lepotilassa</string>
     <string name="app_too_old">Sovelluspäivitys vaaditaan</string>
@@ -309,6 +313,11 @@
     <string name="mute_8_hours">8 tuntia</string>
     <string name="mute_1_week">1 viikko</string>
     <string name="mute_always">Aina</string>
+    <string name="currently">Tällä hetkellä:</string>
+    <string name="mute_status_always">Pysyvästi mykistetty</string>
+    <string name="mute_status_unmuted">Ei mykistetty</string>
+    <string name="mute_status_muted_for_days">Mykistetty %1d päivää ja %.1f tuntia</string>
+    <string name="mute_status_muted_for_hours">Mykistetty %.1f tuntia</string>
     <string name="replace">Korvaa</string>
     <string name="wifi_qr_code_scan">Skannaa WiFi QR-koodi</string>
     <string name="wifi_qr_code_error">WiFi-verkon käyttöoikeustiedoissa on virheellinen QR-koodin muoto</string>
@@ -327,6 +336,7 @@
     <string name="ch_util_definition">Nykyisen kanavan lähetyksen (TX) ja vastaanoton (RX) käyttöaste ja virheelliset lähetykset, eli häiriöt.</string>
     <string name="air_util_definition">Viimeisen tunnin aikana käytetyn lähetyksen prosenttiosuus.</string>
     <string name="iaq">IAQ</string>
+    <string name="show_all_key_title">Salausavainten merkitykset</string>
     <string name="encryption_psk">Jaettu avain</string>
     <string name="encryption_psk_text">Voit lähettää ja vastaanottaa vain kanavaviestejä. Yksityisviestit toimivat vasta, kun käytössä on ohjelmistoversio 2.5+ tai uudempi, jossa on tuki salausavaimille.</string>
     <string name="encryption_pkc">Julkisen avaimen salaus</string>
@@ -589,10 +599,10 @@
     <string name="shutdown_on_battery_delay_seconds">Akun viivästetty sammutus (sekuntia)</string>
     <string name="adc_multiplier_override">ADC-kertoimen ohitus</string>
     <string name="adc_multiplier_override_ratio">Korvaava AD-muuntimen kerroin</string>
-    <string name="wait_for_bluetooth_duration_seconds">Bluetoothin odotusaika (sekuntia)</string>
-    <string name="super_deep_sleep_duration_seconds">Syväunivaiheen kesto (sekuntia)</string>
-    <string name="light_sleep_duration_seconds">Kevyen lepotilan kesto (sekuntia)</string>
-    <string name="minimum_wake_time_seconds">Vähimmäisheräämisaika (sekuntia)</string>
+    <string name="wait_for_bluetooth_duration_seconds">Bluetoothin odotusaika</string>
+    <string name="super_deep_sleep_duration_seconds">Super-syväunen kesto</string>
+    <string name="light_sleep_duration_seconds">Kevytunen kestoaika</string>
+    <string name="minimum_wake_time_seconds">Vähimmäisherätyksen kesto</string>
     <string name="battery_ina_2xx_i2c_address">INA_2XX-akun valvontapiirin I2C-osoite</string>
     <string name="range_test_config">Kuuluvuustestin asetukset</string>
     <string name="range_test_enabled">Kuuluvuustesti käytössä</string>
@@ -626,16 +636,16 @@
     <string name="history_return_window">Historian aikamäärä</string>
     <string name="server">Palvelin</string>
     <string name="telemetry_config">Ympäristön asetukset</string>
-    <string name="device_metrics_update_interval_seconds">Laitteen mittaustietojen päivitysväli (sekuntia)</string>
-    <string name="environment_metrics_update_interval_seconds">Ympäristötietojen päivitysväli (sekuntia)</string>
+    <string name="device_metrics_update_interval_seconds">Laitemittareiden päivitysväli</string>
+    <string name="environment_metrics_update_interval_seconds">Ympäristömittareiden päivitysväli</string>
     <string name="environment_metrics_module_enabled">Ympäristötietojen moduuli käytössä</string>
     <string name="environment_metrics_on_screen_enabled">Näytä ympäristötiedot näytöllä</string>
     <string name="environment_metrics_use_fahrenheit">Käytä Fahrenheit yksikköä</string>
     <string name="air_quality_metrics_module_enabled">Ilmanlaadun tietojen moduuli käytössä</string>
-    <string name="air_quality_metrics_update_interval_seconds">Ilmanlaadun tietojen päivitysväli (sekuntia)</string>
+    <string name="air_quality_metrics_update_interval_seconds">Ilmanlaatumittareiden päivitysväli</string>
     <string name="air_quality_icon">Ilmanlaadun kuvake</string>
     <string name="power_metrics_module_enabled">Virrankulutuksen moduuli käytössä</string>
-    <string name="power_metrics_update_interval_seconds">Virrankulutuksen päivitysväli (sekuntia)</string>
+    <string name="power_metrics_update_interval_seconds">Virtamittareiden päivitysväli</string>
     <string name="power_metrics_on_screen_enabled">Virrankulutuksen näyttö käytössä</string>
     <string name="user_config">Käyttäjäasetukset</string>
     <string name="node_id">Laiteen ID</string>
@@ -894,4 +904,6 @@
     <string name="analytics_notice">Analytiikkatietoja kerätään auttamaan meitä parantamaan Android-sovellusta (kiitos siitä). Saamme anonymisoitua tietoa käyttäjien toiminnasta, kuten kaatumisraportteja ja tietoa sovelluksessa käytetyistä näkymistä jne.</string>
     <string name="analytics_platforms">"Analytiikka-alustat: "</string>
     <string name="for_more_information_see_our_privacy_policy">Lisätietoja saat tietosuojakäytännöstämme.</string>
+    <string name="unset">Ei asetettu – 0</string>
+    <string name="relayed_by">Välittänyt: %s</string>
 </resources>

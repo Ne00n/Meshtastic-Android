@@ -95,6 +95,7 @@
     <string name="config_device_tripleClickAsAdHocPing_summary">Senden Sie den Standort auf dem primären Kanal, wenn dreimal auf die Benutzertaste gedrückt wird.</string>
     <string name="config_device_ledHeartbeatEnabled_summary">Steuert die blinkende LED auf dem Gerät. Bei den meisten Geräten wird damit eine von bis zu 4 LEDs gesteuert, nicht jedoch die LEDS zum Laden und für das GPS.</string>
     <string name="config_device_tzdef_summary">Zeitzone für Daten auf dem Gerätebildschirm und Log.</string>
+    <string name="config_device_use_phone_tz">Zeitzone des Telefons verwenden</string>
     <string name="config_device_transmitOverLora_summary">Ob unsere Nachbarinformation zusätzlich zum Senden an MQTT und die Phone-API auch über LoRa übertragen werden soll. Nicht verfügbar auf einem Kanal mit Standardschlüssel und -name.</string>
     <string name="config_display_screen_on_secs_summary">Wie lange die Anzeige eingeschaltet bleibt, nachdem die Benutzertaste gedrückt oder Nachrichten empfangen wurden.</string>
     <string name="config_display_auto_screen_carousel_secs_summary">Wechselt automatisch wie ein Karussell zur nächsten Seite auf dem Bildschirm, basierend auf dem angegebenen Intervall.</string>
@@ -159,7 +160,7 @@
     <string name="analytics_okay">Analyse und Absturzberichterstattung erlauben.</string>
     <string name="accept">Akzeptieren</string>
     <string name="cancel">Abbrechen</string>
-    <string name="discard_changes">Discard</string>
+    <string name="discard_changes">Verwerfen</string>
     <string name="save_changes">Speichern</string>
     <string name="new_channel_rcvd">Neue Kanal-URL empfangen</string>
     <string name="permission_missing">Meshtastic benötigt aktivierte Standortberechtigungen, um neue Geräte über Bluetooth zu finden. Sie können die Funktion deaktivieren, wenn sie nicht verwendet wird.</string>
@@ -179,6 +180,9 @@
     <string name="ip_port">Port:</string>
     <string name="connected">Verbunden</string>
     <string name="connected_to">Mit Funkgerät verbunden (%s)</string>
+    <string name="connection_status">Aktuelle Verbindungen:</string>
+    <string name="wifi_ip">WLAN IP:</string>
+    <string name="ethernet_ip">Ethernet IP:</string>
     <string name="not_connected">Nicht verbunden</string>
     <string name="connected_sleeping">Mit Funkgerät verbunden, aber es ist im Schlafmodus</string>
     <string name="app_too_old">Anwendungsaktualisierung erforderlich</string>
@@ -310,6 +314,11 @@
     <string name="mute_8_hours">8 Stunden</string>
     <string name="mute_1_week">Eine Woche</string>
     <string name="mute_always">Immer</string>
+    <string name="currently">Aktuell:</string>
+    <string name="mute_status_always">Immer stumm</string>
+    <string name="mute_status_unmuted">Nicht stumm</string>
+    <string name="mute_status_muted_for_days">Stumm für %1d Tage, %.1f Stunden</string>
+    <string name="mute_status_muted_for_hours">Stumm für %.1f Stunden</string>
     <string name="replace">Ersetzen</string>
     <string name="wifi_qr_code_scan">WiFi QR-Code scannen</string>
     <string name="wifi_qr_code_error">Ungültiges QR-Code-Format für WiFi-Berechtigung</string>
@@ -328,6 +337,7 @@
     <string name="ch_util_definition">Auslastung für den aktuellen Kanal, einschließlich fehlerfreier TX, RX und fehlerhaftem RX (Rauschen).</string>
     <string name="air_util_definition">Prozentuale Sendezeit für die Übertragung innerhalb der letzten Stunde.</string>
     <string name="iaq">IAQ</string>
+    <string name="show_all_key_title">Bedeutung der Verschlüsselung</string>
     <string name="encryption_psk">Geteilter Schlüssel</string>
     <string name="encryption_psk_text">Es können nur Kanalnachrichten gesendet/empfangen werden. Direktnachrichten erfordern die Verschlüsselung mit öffentlichem Knotenschlüssel seit Firmware 2.5+.</string>
     <string name="encryption_pkc">Verschlüsselung mit öffentlichen Schlüssel</string>
@@ -590,10 +600,10 @@
     <string name="shutdown_on_battery_delay_seconds">Verzögerung zum Herunterfahren bei Akkubetrieb (Sekunden)</string>
     <string name="adc_multiplier_override">ADC Multiplikationsfaktor</string>
     <string name="adc_multiplier_override_ratio">ADC Multiplikator Überschreibungsverhältnis</string>
-    <string name="wait_for_bluetooth_duration_seconds">Warte auf Bluetooth (Sekunden)</string>
-    <string name="super_deep_sleep_duration_seconds">Supertiefschlaf (Sekunden)</string>
-    <string name="light_sleep_duration_seconds">Leichtschlaf (Sekunden)</string>
-    <string name="minimum_wake_time_seconds">Minimale Aufwachzeit (Sekunden)</string>
+    <string name="wait_for_bluetooth_duration_seconds">Zeit für Warten auf Bluetooth</string>
+    <string name="super_deep_sleep_duration_seconds">Dauer Supertiefschlaf</string>
+    <string name="light_sleep_duration_seconds">Dauer leichter Schlafmodus</string>
+    <string name="minimum_wake_time_seconds">Minimale Aufwachzeit</string>
     <string name="battery_ina_2xx_i2c_address">Akku INA_2XX I2C Adresse</string>
     <string name="range_test_config">Einstellungen Reichweitentest</string>
     <string name="range_test_enabled">Reichweitentest aktiviert</string>
@@ -627,16 +637,16 @@
     <string name="history_return_window">Zeitraum Rückgabewert</string>
     <string name="server">Server</string>
     <string name="telemetry_config">Telemetrie Einstellungen</string>
-    <string name="device_metrics_update_interval_seconds">Aktualisierungsintervall für Gerätedaten (Sekunden)</string>
-    <string name="environment_metrics_update_interval_seconds">Aktualisierungsintervall für Umweltdaten (Sekunden)</string>
+    <string name="device_metrics_update_interval_seconds">Aktualisierungsintervall für Gerätedaten</string>
+    <string name="environment_metrics_update_interval_seconds">Aktualisierungsintervall für Umweltdaten</string>
     <string name="environment_metrics_module_enabled">Modul Umweltdaten aktiviert</string>
     <string name="environment_metrics_on_screen_enabled">Umweltdatenanzeige aktiviert</string>
     <string name="environment_metrics_use_fahrenheit">Umweltdaten in Fahrenheit</string>
     <string name="air_quality_metrics_module_enabled">Modul Luftqualität aktiviert</string>
-    <string name="air_quality_metrics_update_interval_seconds">Aktualisierungsintervall für Luftqualität (Sekunden)</string>
+    <string name="air_quality_metrics_update_interval_seconds">Aktualisierungsintervall der Luftqualität</string>
     <string name="air_quality_icon">Symbol für Luftqualität</string>
     <string name="power_metrics_module_enabled">Modul Energiedaten aktiviert</string>
-    <string name="power_metrics_update_interval_seconds">Aktualisierungsintervall für Energiedaten (Sekunden)</string>
+    <string name="power_metrics_update_interval_seconds">Aktualisierungsintervall für Energiedaten</string>
     <string name="power_metrics_on_screen_enabled">Energiedatenanzeige aktiviert</string>
     <string name="user_config">Benutzer Einstellungen</string>
     <string name="node_id">Knoten-ID</string>
@@ -891,8 +901,10 @@
     <string name="dbm_value">%1$d dBm</string>
     <string name="error_no_app_to_handle_link">Keine Anwendung zum Bearbeiten des Links verfügbar.</string>
     <string name="system_settings">Systemeinstellungen</string>
-    <string name="no_local_stats">No Stats Available</string>
-    <string name="analytics_notice">Analytics are collected to help us improve the Android app (thank you), we will receive anonymized information about user behavior. This includes crash reports, screens used in the app, etc.</string>
-    <string name="analytics_platforms">"Analytics platforms: "</string>
-    <string name="for_more_information_see_our_privacy_policy">For more information, see our privacy policy.</string>
+    <string name="no_local_stats">Keine Statistiken verfügbar</string>
+    <string name="analytics_notice">Die Analysedaten helfen uns, die Android-App zu verbessern (Danke). Wir erhalten anonymisierte Informationen zum Nutzerverhalten. Dazu gehören Absturzberichte, in der App verwendete Bildschirme usw.</string>
+    <string name="analytics_platforms">"Analyse Plattformen: "</string>
+    <string name="for_more_information_see_our_privacy_policy">Weitere Informationen finden Sie in unserer Datenschutzrichtlinie.</string>
+    <string name="unset">Nicht gesetzt - 0</string>
+    <string name="relayed_by">Weitergeleitet von: %s</string>
 </resources>

@@ -33,7 +33,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.meshtastic.core.strings.R
 import org.meshtastic.core.ui.component.DropDownPreference
 import org.meshtastic.core.ui.component.EditTextPreference
 import org.meshtastic.core.ui.component.SwitchPreference
@@ -44,6 +43,7 @@ import org.meshtastic.feature.settings.util.gpioPins
 import org.meshtastic.feature.settings.util.toDisplayString
 import org.meshtastic.proto.copy
 import org.meshtastic.proto.moduleConfig
+import org.meshtastic.core.strings.R as Res
 
 @Composable
 fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewModel(), onBack: () -> Unit) {
@@ -55,7 +55,7 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
     val focusManager = LocalFocusManager.current
 
     RadioConfigScreenList(
-        title = stringResource(id = R.string.external_notification),
+        title = stringResource(Res.string.external_notification),
         onBack = onBack,
         configState = formState,
         enabled = state.connected,
@@ -72,9 +72,9 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
         },
     ) {
         item {
-            TitledCard(title = stringResource(R.string.external_notification_config)) {
+            TitledCard(title = stringResource(Res.string.external_notification_config)) {
                 SwitchPreference(
-                    title = stringResource(R.string.external_notification_enabled),
+                    title = stringResource(Res.string.external_notification_enabled),
                     checked = formState.value.enabled,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { this.enabled = it } },
@@ -84,9 +84,9 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
         }
 
         item {
-            TitledCard(title = stringResource(R.string.notifications_on_message_receipt)) {
+            TitledCard(title = stringResource(Res.string.notifications_on_message_receipt)) {
                 SwitchPreference(
-                    title = stringResource(R.string.alert_message_led),
+                    title = stringResource(Res.string.alert_message_led),
                     checked = formState.value.alertMessage,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { alertMessage = it } },
@@ -94,7 +94,7 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
                 )
                 HorizontalDivider()
                 SwitchPreference(
-                    title = stringResource(R.string.alert_message_buzzer),
+                    title = stringResource(Res.string.alert_message_buzzer),
                     checked = formState.value.alertMessageBuzzer,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { alertMessageBuzzer = it } },
@@ -102,7 +102,7 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
                 )
                 HorizontalDivider()
                 SwitchPreference(
-                    title = stringResource(R.string.alert_message_vibra),
+                    title = stringResource(Res.string.alert_message_vibra),
                     checked = formState.value.alertMessageVibra,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { alertMessageVibra = it } },
@@ -112,9 +112,9 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
         }
 
         item {
-            TitledCard(title = stringResource(R.string.notifications_on_alert_bell_receipt)) {
+            TitledCard(title = stringResource(Res.string.notifications_on_alert_bell_receipt)) {
                 SwitchPreference(
-                    title = stringResource(R.string.alert_bell_led),
+                    title = stringResource(Res.string.alert_bell_led),
                     checked = formState.value.alertBell,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { alertBell = it } },
@@ -122,7 +122,7 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
                 )
                 HorizontalDivider()
                 SwitchPreference(
-                    title = stringResource(R.string.alert_bell_buzzer),
+                    title = stringResource(Res.string.alert_bell_buzzer),
                     checked = formState.value.alertBellBuzzer,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { alertBellBuzzer = it } },
@@ -130,7 +130,7 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
                 )
                 HorizontalDivider()
                 SwitchPreference(
-                    title = stringResource(R.string.alert_bell_vibra),
+                    title = stringResource(Res.string.alert_bell_vibra),
                     checked = formState.value.alertBellVibra,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { alertBellVibra = it } },
@@ -140,10 +140,10 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
         }
 
         item {
-            TitledCard(title = stringResource(R.string.advanced)) {
+            TitledCard(title = stringResource(Res.string.advanced)) {
                 val gpio = remember { gpioPins }
                 DropDownPreference(
-                    title = stringResource(R.string.output_led_gpio),
+                    title = stringResource(Res.string.output_led_gpio),
                     items = gpio,
                     selectedItem = formState.value.output,
                     enabled = state.connected,
@@ -152,7 +152,7 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
                 if (formState.value.output != 0) {
                     HorizontalDivider()
                     SwitchPreference(
-                        title = stringResource(R.string.output_led_active_high),
+                        title = stringResource(Res.string.output_led_active_high),
                         checked = formState.value.active,
                         enabled = state.connected,
                         onCheckedChange = { formState.value = formState.value.copy { active = it } },
@@ -161,7 +161,7 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
                 }
                 HorizontalDivider()
                 DropDownPreference(
-                    title = stringResource(R.string.output_buzzer_gpio),
+                    title = stringResource(Res.string.output_buzzer_gpio),
                     items = gpio,
                     selectedItem = formState.value.outputBuzzer,
                     enabled = state.connected,
@@ -170,7 +170,7 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
                 if (formState.value.outputBuzzer != 0) {
                     HorizontalDivider()
                     SwitchPreference(
-                        title = stringResource(R.string.use_pwm_buzzer),
+                        title = stringResource(Res.string.use_pwm_buzzer),
                         checked = formState.value.usePwm,
                         enabled = state.connected,
                         onCheckedChange = { formState.value = formState.value.copy { usePwm = it } },
@@ -179,7 +179,7 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
                 }
                 HorizontalDivider()
                 DropDownPreference(
-                    title = stringResource(R.string.output_vibra_gpio),
+                    title = stringResource(Res.string.output_vibra_gpio),
                     items = gpio,
                     selectedItem = formState.value.outputVibra,
                     enabled = state.connected,
@@ -188,7 +188,7 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
                 HorizontalDivider()
                 val outputItems = remember { IntervalConfiguration.OUTPUT.allowedIntervals }
                 DropDownPreference(
-                    title = stringResource(R.string.output_duration_milliseconds),
+                    title = stringResource(Res.string.output_duration_milliseconds),
                     items = outputItems.map { it.value to it.toDisplayString() },
                     selectedItem = formState.value.outputMs,
                     enabled = state.connected,
@@ -197,7 +197,7 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
                 HorizontalDivider()
                 val nagItems = remember { IntervalConfiguration.NAG_TIMEOUT.allowedIntervals }
                 DropDownPreference(
-                    title = stringResource(R.string.nag_timeout_seconds),
+                    title = stringResource(Res.string.nag_timeout_seconds),
                     items = nagItems.map { it.value to it.toDisplayString() },
                     selectedItem = formState.value.nagTimeout,
                     enabled = state.connected,
@@ -205,7 +205,7 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
                 )
                 HorizontalDivider()
                 EditTextPreference(
-                    title = stringResource(R.string.ringtone),
+                    title = stringResource(Res.string.ringtone),
                     value = ringtoneInput,
                     maxSize = 230, // ringtone max_size:231
                     enabled = state.connected,
@@ -217,7 +217,7 @@ fun ExternalNotificationConfigScreen(viewModel: RadioConfigViewModel = hiltViewM
                 )
                 HorizontalDivider()
                 SwitchPreference(
-                    title = stringResource(R.string.use_i2s_as_buzzer),
+                    title = stringResource(Res.string.use_i2s_as_buzzer),
                     checked = formState.value.useI2SAsBuzzer,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { useI2SAsBuzzer = it } },

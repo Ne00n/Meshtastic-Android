@@ -95,6 +95,7 @@
     <string name="config_device_tripleClickAsAdHocPing_summary">Пошаљи позицију на примарном каналу када се корисничко дугме три пута кликне.</string>
     <string name="config_device_ledHeartbeatEnabled_summary">Контролише трепћућу LED лампицу на уређају. За већину уређаја ово ће контролисати једну од до 4 LED лампице, LED лампице за пуњач и GPS нису контролисане.</string>
     <string name="config_device_tzdef_summary">Временска зона за датуме на екрану уређаја и у евиденцији.</string>
+    <string name="config_device_use_phone_tz">Use phone time zone</string>
     <string name="config_device_transmitOverLora_summary">Да ли би поред слања на MQTT и PhoneAPI, наша NeighborInfo требало да се преноси преко LoRa? Није доступно на каналу са подразумеваним кључем и именом.</string>
     <string name="config_display_screen_on_secs_summary">Колико дуго екран остаје укључен након притиска корисничког дугмета или пријема порука.</string>
     <string name="config_display_auto_screen_carousel_secs_summary">Аутоматски се пребацује на следећу страницу на екрану као карусел, на основу наведеног интервала.</string>
@@ -179,6 +180,9 @@
     <string name="ip_port">Port:</string>
     <string name="connected">Блутут повезан</string>
     <string name="connected_to">Повезан на радио уређај (%s)</string>
+    <string name="connection_status">Current connections:</string>
+    <string name="wifi_ip">Wifi IP:</string>
+    <string name="ethernet_ip">Ethernet IP:</string>
     <string name="not_connected">Није повезан</string>
     <string name="connected_sleeping">Повезан на радио уређај, али уређај је у стању спавања</string>
     <string name="app_too_old">Неопходно је ажурирање апликације</string>
@@ -310,6 +314,11 @@
     <string name="mute_8_hours">8 сати</string>
     <string name="mute_1_week">1 седмица</string>
     <string name="mute_always">Увек</string>
+    <string name="currently">Currently:</string>
+    <string name="mute_status_always">Always muted</string>
+    <string name="mute_status_unmuted">Not muted</string>
+    <string name="mute_status_muted_for_days">Muted for %1d days, %.1f hours</string>
+    <string name="mute_status_muted_for_hours">Muted for %.1f hours</string>
     <string name="replace">Замени</string>
     <string name="wifi_qr_code_scan">Скенирај ВајФај QR код</string>
     <string name="wifi_qr_code_error">Неважећи формат QR кода за ВајФАј податке</string>
@@ -328,6 +337,7 @@
     <string name="ch_util_definition">Искоришћење за тренутни канал, укључујући добро формиран TX, RX и неисправан RX (такође познат као шум).</string>
     <string name="air_util_definition">Проценат искоришћења ефирског времена за пренос у последњем сату.</string>
     <string name="iaq">IAQ</string>
+    <string name="show_all_key_title">Encryption Key Meanings</string>
     <string name="encryption_psk">Дељени кључ</string>
     <string name="encryption_psk_text">Only channel messages can be sent/received. Direct Messages require the Public Key Infrastructure feature in 2.5+ firmware.</string>
     <string name="encryption_pkc">Шифровање јавним кључем</string>
@@ -591,10 +601,10 @@
     <string name="shutdown_on_battery_delay_seconds">Shutdown on battery delay (seconds)</string>
     <string name="adc_multiplier_override">ADC multiplier override</string>
     <string name="adc_multiplier_override_ratio">ADC multiplier override ratio</string>
-    <string name="wait_for_bluetooth_duration_seconds">Wait for Bluetooth duration (seconds)</string>
-    <string name="super_deep_sleep_duration_seconds">Super deep sleep duration (seconds)</string>
-    <string name="light_sleep_duration_seconds">Light sleep duration (seconds)</string>
-    <string name="minimum_wake_time_seconds">Minimum wake time (seconds)</string>
+    <string name="wait_for_bluetooth_duration_seconds">Wait for Bluetooth duration</string>
+    <string name="super_deep_sleep_duration_seconds">Super deep sleep duration</string>
+    <string name="light_sleep_duration_seconds">Light sleep duration</string>
+    <string name="minimum_wake_time_seconds">Minimum wake time</string>
     <string name="battery_ina_2xx_i2c_address">Battery INA_2XX I2C address</string>
     <string name="range_test_config">Конфигурација теста домета</string>
     <string name="range_test_enabled">Range test enabled</string>
@@ -628,16 +638,16 @@
     <string name="history_return_window">History return window</string>
     <string name="server">Сервер</string>
     <string name="telemetry_config">Конфигурација телеметрије</string>
-    <string name="device_metrics_update_interval_seconds">Device metrics update interval (seconds)</string>
-    <string name="environment_metrics_update_interval_seconds">Environment metrics update interval (seconds)</string>
+    <string name="device_metrics_update_interval_seconds">Device metrics update interval</string>
+    <string name="environment_metrics_update_interval_seconds">Environment metrics update interval</string>
     <string name="environment_metrics_module_enabled">Environment metrics module enabled</string>
     <string name="environment_metrics_on_screen_enabled">Environment metrics on-screen enabled</string>
     <string name="environment_metrics_use_fahrenheit">Environment metrics use Fahrenheit</string>
     <string name="air_quality_metrics_module_enabled">Air quality metrics module enabled</string>
-    <string name="air_quality_metrics_update_interval_seconds">Air quality metrics update interval (seconds)</string>
+    <string name="air_quality_metrics_update_interval_seconds">Air quality metrics update interval</string>
     <string name="air_quality_icon">Air quality icon</string>
     <string name="power_metrics_module_enabled">Power metrics module enabled</string>
-    <string name="power_metrics_update_interval_seconds">Power metrics update interval (seconds)</string>
+    <string name="power_metrics_update_interval_seconds">Power metrics update interval</string>
     <string name="power_metrics_on_screen_enabled">Power metrics on-screen enabled</string>
     <string name="user_config">Корисничка подешавања</string>
     <string name="node_id">Node ID</string>
@@ -896,4 +906,6 @@
     <string name="analytics_notice">Analytics are collected to help us improve the Android app (thank you), we will receive anonymized information about user behavior. This includes crash reports, screens used in the app, etc.</string>
     <string name="analytics_platforms">"Analytics platforms: "</string>
     <string name="for_more_information_see_our_privacy_policy">For more information, see our privacy policy.</string>
+    <string name="unset">Unset - 0</string>
+    <string name="relayed_by">Relayed by: %s</string>
 </resources>

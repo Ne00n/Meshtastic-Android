@@ -24,7 +24,6 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.provider.Settings.ACTION_APP_LOCALE_SETTINGS
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity.RESULT_OK
@@ -34,6 +33,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.rounded.AppSettingsAlt
 import androidx.compose.material.icons.rounded.FormatPaint
@@ -49,9 +49,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -60,16 +62,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.meshtastic.core.common.gpsDisabled
 import org.meshtastic.core.navigation.Route
-import org.meshtastic.core.strings.R
+import org.meshtastic.core.ui.component.ListItem
 import org.meshtastic.core.ui.component.MainAppBar
 import org.meshtastic.core.ui.component.MultipleChoiceAlertDialog
-import org.meshtastic.core.ui.component.SettingsItem
-import org.meshtastic.core.ui.component.SettingsItemDetail
-import org.meshtastic.core.ui.component.SettingsItemSwitch
+import org.meshtastic.core.ui.component.SwitchListItem
 import org.meshtastic.core.ui.component.TitledCard
 import org.meshtastic.core.ui.theme.MODE_DYNAMIC
+import org.meshtastic.core.ui.util.showToast
 import org.meshtastic.feature.settings.navigation.getNavRouteFrom
 import org.meshtastic.feature.settings.radio.RadioConfigItemList
 import org.meshtastic.feature.settings.radio.RadioConfigViewModel
@@ -82,6 +84,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.time.Duration.Companion.seconds
+import org.meshtastic.core.strings.R as Res
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -138,9 +141,9 @@ fun SettingsScreen(
         EditDeviceProfileDialog(
             title =
             if (deviceProfile != null) {
-                stringResource(R.string.import_configuration)
+                stringResource(Res.string.import_configuration)
             } else {
-                stringResource(R.string.export_configuration)
+                stringResource(Res.string.export_configuration)
             },
             deviceProfile = deviceProfile ?: viewModel.currentDeviceProfile,
             onConfirm = {
@@ -185,13 +188,13 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             MainAppBar(
-                title = stringResource(R.string.bottom_nav_settings),
+                title = stringResource(Res.string.bottom_nav_settings),
                 subtitle =
                 if (state.isLocal) {
                     ourNode?.user?.longName
                 } else {
                     val remoteName = viewModel.destNode.value?.user?.longName ?: ""
-                    stringResource(R.string.remotely_administrating, remoteName)
+                    stringResource(Res.string.remotely_administrating, remoteName)
                 },
                 ourNode = ourNode,
                 showNodeChip = ourNode != null && isConnected && state.isLocal,
@@ -229,13 +232,14 @@ fun SettingsScreen(
                 onNavigate = onNavigate,
             )
 
+            val scope = rememberCoroutineScope()
             val context = LocalContext.current
 
-            TitledCard(title = stringResource(R.string.app_settings), modifier = Modifier.padding(top = 16.dp)) {
+            TitledCard(title = stringResource(Res.string.app_settings), modifier = Modifier.padding(top = 16.dp)) {
                 if (state.analyticsAvailable) {
                     val allowed by viewModel.analyticsAllowedFlow.collectAsStateWithLifecycle(false)
-                    SettingsItemSwitch(
-                        text = stringResource(R.string.analytics_okay),
+                    SwitchListItem(
+                        text = stringResource(Res.string.analytics_okay),
                         checked = allowed,
                         leadingIcon = Icons.Default.BugReport,
                         onClick = { viewModel.toggleAnalyticsAllowed() },
@@ -253,12 +257,7 @@ fun SettingsScreen(
                             if (!isGpsDisabled) {
                                 settingsViewModel.meshService?.startProvideLocation()
                             } else {
-                                Toast.makeText(
-                                    context,
-                                    context.getString(R.string.location_disabled),
-                                    Toast.LENGTH_LONG,
-                                )
-                                    .show()
+                                context.showToast(Res.string.location_disabled)
                             }
                         } else {
                             // Request permissions if not granted and user wants to provide location
@@ -269,14 +268,13 @@ fun SettingsScreen(
                     }
                 }
 
-                SettingsItemSwitch(
-                    text = stringResource(R.string.provide_location_to_mesh),
+                SwitchListItem(
+                    text = stringResource(Res.string.provide_location_to_mesh),
                     leadingIcon = Icons.Rounded.LocationOn,
                     enabled = !isGpsDisabled,
                     checked = provideLocation,
-                ) {
-                    settingsViewModel.setProvideLocation(!provideLocation)
-                }
+                    onClick = { settingsViewModel.setProvideLocation(!provideLocation) },
+                )
 
                 val settingsLauncher =
                     rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) {}
@@ -284,15 +282,10 @@ fun SettingsScreen(
                 // On Android 12 and below, system app settings for language are not available. Use the in-app language
                 // picker for these devices.
                 val useInAppLangPicker = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
-                SettingsItem(
-                    text = stringResource(R.string.preferences_language),
+                ListItem(
+                    text = stringResource(Res.string.preferences_language),
                     leadingIcon = Icons.Rounded.Language,
-                    trailingContent =
-                    if (useInAppLangPicker) {
-                        null
-                    } else {
-                        {}
-                    },
+                    trailingIcon = if (useInAppLangPicker) null else Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                 ) {
                     if (useInAppLangPicker) {
                         showLanguagePickerDialog = true
@@ -307,14 +300,15 @@ fun SettingsScreen(
                     }
                 }
 
-                SettingsItem(
-                    text = stringResource(R.string.theme),
+                ListItem(
+                    text = stringResource(Res.string.theme),
                     leadingIcon = Icons.Rounded.FormatPaint,
-                    trailingContent = {},
+                    trailingIcon = null,
                 ) {
                     showThemePickerDialog = true
                 }
                 val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+                val nodeName = ourNode?.user?.shortName ?: ""
 
                 val exportRangeTestLauncher =
                     rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -322,16 +316,16 @@ fun SettingsScreen(
                             it.data?.data?.let { uri -> settingsViewModel.saveDataCsv(uri) }
                         }
                     }
-                SettingsItem(
-                    text = stringResource(R.string.save_rangetest),
+                ListItem(
+                    text = stringResource(Res.string.save_rangetest),
                     leadingIcon = Icons.Rounded.Output,
-                    trailingContent = {},
+                    trailingIcon = null,
                 ) {
                     val intent =
                         Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
                             addCategory(Intent.CATEGORY_OPENABLE)
                             type = "application/csv"
-                            putExtra(Intent.EXTRA_TITLE, "Meshtastic_rangetest_$timestamp.csv")
+                            putExtra(Intent.EXTRA_TITLE, "Meshtastic_rangetest_${nodeName}_$timestamp.csv")
                         }
                     exportRangeTestLauncher.launch(intent)
                 }
@@ -342,32 +336,32 @@ fun SettingsScreen(
                             it.data?.data?.let { uri -> settingsViewModel.saveDataCsv(uri) }
                         }
                     }
-                SettingsItem(
-                    text = stringResource(R.string.export_data_csv),
+                ListItem(
+                    text = stringResource(Res.string.export_data_csv),
                     leadingIcon = Icons.Rounded.Output,
-                    trailingContent = {},
+                    trailingIcon = null,
                 ) {
                     val intent =
                         Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
                             addCategory(Intent.CATEGORY_OPENABLE)
                             type = "application/csv"
-                            putExtra(Intent.EXTRA_TITLE, "Meshtastic_datalog_$timestamp.csv")
+                            putExtra(Intent.EXTRA_TITLE, "Meshtastic_datalog_${nodeName}_$timestamp.csv")
                         }
                     exportDataLauncher.launch(intent)
                 }
 
-                SettingsItem(
-                    text = stringResource(R.string.intro_show),
+                ListItem(
+                    text = stringResource(Res.string.intro_show),
                     leadingIcon = Icons.Rounded.WavingHand,
-                    trailingContent = {},
+                    trailingIcon = null,
                 ) {
                     settingsViewModel.showAppIntro()
                 }
 
-                SettingsItem(
-                    text = stringResource(R.string.system_settings),
+                ListItem(
+                    text = stringResource(Res.string.system_settings),
                     leadingIcon = Icons.Rounded.AppSettingsAlt,
-                    trailingContent = null,
+                    trailingIcon = null,
                 ) {
                     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                     intent.data = Uri.fromParts("package", context.packageName, null)
@@ -396,6 +390,7 @@ private fun AppVersionButton(
     appVersionName: String,
     onUnlockExcludedModules: () -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var clickCount by remember { mutableIntStateOf(0) }
 
@@ -406,23 +401,24 @@ private fun AppVersionButton(
         }
     }
 
-    SettingsItemDetail(
-        text = stringResource(R.string.app_version),
-        icon = Icons.Rounded.Memory,
+    ListItem(
+        text = stringResource(Res.string.app_version),
+        leadingIcon = Icons.Rounded.Memory,
         supportingText = appVersionName,
+        trailingIcon = null,
     ) {
         clickCount = clickCount.inc().coerceIn(0, UNLOCK_CLICK_COUNT)
 
         when {
             clickCount == UNLOCKED_CLICK_COUNT && excludedModulesUnlocked -> {
                 clickCount = 0
-                Toast.makeText(context, context.getString(R.string.modules_already_unlocked), Toast.LENGTH_LONG).show()
+                scope.launch { context.showToast(Res.string.modules_already_unlocked) }
             }
 
             clickCount == UNLOCK_CLICK_COUNT -> {
                 clickCount = 0
                 onUnlockExcludedModules()
-                Toast.makeText(context, context.getString(R.string.modules_unlocked), Toast.LENGTH_LONG).show()
+                scope.launch { context.showToast(Res.string.modules_unlocked) }
             }
         }
     }
@@ -439,7 +435,7 @@ private fun LanguagePickerDialog(onDismiss: () -> Unit) {
     }
 
     MultipleChoiceAlertDialog(
-        title = stringResource(R.string.preferences_language),
+        title = stringResource(Res.string.preferences_language),
         message = "",
         choices = choices,
         onDismissRequest = onDismiss,
@@ -448,19 +444,19 @@ private fun LanguagePickerDialog(onDismiss: () -> Unit) {
 
 @Composable
 private fun ThemePickerDialog(onClickTheme: (Int) -> Unit, onDismiss: () -> Unit) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val themeMap = remember {
         mapOf(
-            context.getString(R.string.dynamic) to MODE_DYNAMIC,
-            context.getString(R.string.theme_light) to AppCompatDelegate.MODE_NIGHT_NO,
-            context.getString(R.string.theme_dark) to AppCompatDelegate.MODE_NIGHT_YES,
-            context.getString(R.string.theme_system) to AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
+            resources.getString(Res.string.dynamic) to MODE_DYNAMIC,
+            resources.getString(Res.string.theme_light) to AppCompatDelegate.MODE_NIGHT_NO,
+            resources.getString(Res.string.theme_dark) to AppCompatDelegate.MODE_NIGHT_YES,
+            resources.getString(Res.string.theme_system) to AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
         )
             .mapValues { (_, value) -> { onClickTheme(value) } }
     }
 
     MultipleChoiceAlertDialog(
-        title = stringResource(R.string.choose_theme),
+        title = stringResource(Res.string.choose_theme),
         message = "",
         choices = themeMap,
         onDismissRequest = onDismiss,

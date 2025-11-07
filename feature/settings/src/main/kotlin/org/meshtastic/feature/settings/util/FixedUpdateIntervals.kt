@@ -57,6 +57,10 @@ enum class FixedUpdateIntervals(val value: Long) {
     FORTY_EIGHT_HOURS(TimeUnit.HOURS.toSeconds(48)),
     SEVENTY_TWO_HOURS(TimeUnit.HOURS.toSeconds(72)),
     ALWAYS_ON(Int.MAX_VALUE.toLong()),
+    EIGHTY_SECONDS(TimeUnit.SECONDS.toSeconds(80)),
+    NINETY_SECONDS(TimeUnit.SECONDS.toSeconds(90)),
+    EIGHT_SECONDS(TimeUnit.SECONDS.toSeconds(8)),
+    FORTY_SECONDS(TimeUnit.SECONDS.toSeconds(40)),
     ;
 
     companion object {
@@ -255,6 +259,10 @@ enum class IntervalConfiguration {
             POSITION_BROADCAST ->
                 listOf(
                     FixedUpdateIntervals.UNSET,
+                    FixedUpdateIntervals.ONE_MINUTE,
+                    FixedUpdateIntervals.NINETY_SECONDS,
+                    FixedUpdateIntervals.FIVE_MINUTES,
+                    FixedUpdateIntervals.FIFTEEN_MINUTES,
                     FixedUpdateIntervals.ONE_HOUR,
                     FixedUpdateIntervals.TWO_HOURS,
                     FixedUpdateIntervals.THREE_HOURS,
@@ -270,8 +278,12 @@ enum class IntervalConfiguration {
                 )
             GPS_UPDATE ->
                 listOf(
-                    FixedUpdateIntervals.THIRTY_SECONDS,
+                    FixedUpdateIntervals.UNSET,
+                    FixedUpdateIntervals.EIGHT_SECONDS,
+                    FixedUpdateIntervals.TWENTY_SECONDS,
+                    FixedUpdateIntervals.FORTY_SECONDS,
                     FixedUpdateIntervals.ONE_MINUTE,
+                    FixedUpdateIntervals.EIGHTY_SECONDS,
                     FixedUpdateIntervals.TWO_MINUTES,
                     FixedUpdateIntervals.FIVE_MINUTES,
                     FixedUpdateIntervals.TEN_MINUTES,
