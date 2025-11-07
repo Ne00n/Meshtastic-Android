@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2025 Meshtastic LLC
  *
  * This program is free software: you can redistribute it and/or modify
@@ -165,9 +165,9 @@ fun BLEDevices(
                             Row {
                                 Icon(
                                     imageVector = Icons.Rounded.BluetoothDisabled,
-                                    contentDescription = stringResource(R.string.disconnect),
+                                    contentDescription = stringResource(Res.string.disconnect),
                                 )
-                                Text(stringResource(R.string.disconnect))
+                                Text(stringResource(Res.string.disconnect))
                             }
                         }
                     }
