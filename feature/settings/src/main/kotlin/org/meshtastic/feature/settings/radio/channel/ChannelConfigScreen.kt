@@ -48,13 +48,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.jetbrains.compose.resources.stringResource
 import org.meshtastic.core.model.Channel
 import org.meshtastic.core.model.DeviceVersion
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.add
+import org.meshtastic.core.strings.cancel
+import org.meshtastic.core.strings.channel_name
+import org.meshtastic.core.strings.channels
+import org.meshtastic.core.strings.press_and_drag
+import org.meshtastic.core.strings.send
+import org.meshtastic.core.ui.component.MainAppBar
 import org.meshtastic.core.ui.component.PreferenceFooter
 import org.meshtastic.core.ui.component.dragContainer
 import org.meshtastic.core.ui.component.dragDropItemsIndexed
@@ -70,7 +78,6 @@ import org.meshtastic.feature.settings.radio.component.PacketResponseStateDialog
 import org.meshtastic.proto.ChannelProtos.ChannelSettings
 import org.meshtastic.proto.ConfigProtos.Config.LoRaConfig
 import org.meshtastic.proto.channelSettings
-import org.meshtastic.core.strings.R as Res
 
 @Composable
 fun ChannelConfigScreen(viewModel: RadioConfigViewModel, onBack: () -> Unit) {
@@ -153,6 +160,17 @@ private fun ChannelConfigScreen(
     }
 
     Scaffold(
+        topBar = {
+            MainAppBar(
+                title = title,
+                canNavigateUp = true,
+                onNavigateUp = onBack,
+                ourNode = null,
+                showNodeChip = false,
+                actions = {},
+                onClickChip = {},
+            )
+        },
         floatingActionButton = {
             if (maxChannels > settingsListInput.size) {
                 FloatingActionButton(

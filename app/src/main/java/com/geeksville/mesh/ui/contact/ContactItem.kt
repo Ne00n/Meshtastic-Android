@@ -37,6 +37,7 @@ import androidx.compose.material.icons.automirrored.twotone.VolumeOff
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -44,7 +45,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -53,10 +53,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.geeksville.mesh.model.Contact
+import org.jetbrains.compose.resources.stringResource
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.sample_message
+import org.meshtastic.core.strings.some_username
+import org.meshtastic.core.strings.unknown_username
 import org.meshtastic.core.ui.component.SecurityIcon
 import org.meshtastic.core.ui.theme.AppTheme
 import org.meshtastic.proto.AppOnlyProtos
-import org.meshtastic.core.strings.R as Res
 
 @Suppress("LongMethod")
 @Composable
@@ -64,20 +68,39 @@ fun ContactItem(
     contact: Contact,
     selected: Boolean,
     modifier: Modifier = Modifier,
+    isActive: Boolean = false,
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = {},
     onNodeChipClick: () -> Unit = {},
     channels: AppOnlyProtos.ChannelSet? = null,
 ) = with(contact) {
+    val isOutlined = !selected && !isActive
+
+    val colors =
+        if (isOutlined) {
+            CardDefaults.outlinedCardColors(containerColor = Color.Transparent)
+        } else {
+            val containerColor = if (selected) Color.Gray else MaterialTheme.colorScheme.surfaceVariant
+            CardDefaults.cardColors(containerColor = containerColor)
+        }
+
+    val border =
+        if (isOutlined) {
+            CardDefaults.outlinedCardBorder()
+        } else {
+            null
+        }
+
     Card(
         modifier =
         modifier
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .background(color = if (selected) Color.Gray else MaterialTheme.colorScheme.background)
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp)
             .semantics { contentDescription = shortName },
         shape = RoundedCornerShape(12.dp),
+        colors = colors,
+        border = border,
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
             ContactHeader(contact = contact, channels = channels, onNodeChipClick = onNodeChipClick)

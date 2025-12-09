@@ -26,22 +26,30 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.meshtastic.core.common.BuildConfigProvider
+import org.meshtastic.core.data.repository.DeviceHardwareRepository
 import org.meshtastic.core.data.repository.MeshLogRepository
 import org.meshtastic.core.data.repository.NodeRepository
 import org.meshtastic.core.data.repository.RadioConfigRepository
+import org.meshtastic.core.database.DatabaseConstants
+import org.meshtastic.core.database.DatabaseManager
 import org.meshtastic.core.database.entity.MyNodeEntity
 import org.meshtastic.core.database.model.Node
 import org.meshtastic.core.datastore.UiPreferencesDataSource
 import org.meshtastic.core.model.Position
 import org.meshtastic.core.model.util.positionToMeter
+import org.meshtastic.core.prefs.radio.RadioPrefs
+import org.meshtastic.core.prefs.radio.isBle
+import org.meshtastic.core.prefs.radio.isSerial
 import org.meshtastic.core.prefs.ui.UiPrefs
 import org.meshtastic.core.service.IMeshService
 import org.meshtastic.core.service.ServiceRepository
@@ -71,6 +79,9 @@ constructor(
     private val uiPrefs: UiPrefs,
     private val uiPreferencesDataSource: UiPreferencesDataSource,
     private val buildConfigProvider: BuildConfigProvider,
+    private val databaseManager: DatabaseManager,
+    private val deviceHardwareRepository: DeviceHardwareRepository,
+    private val radioPrefs: RadioPrefs,
 ) : ViewModel() {
     val myNodeInfo: StateFlow<MyNodeEntity?> = nodeRepository.myNodeInfo
 
@@ -105,6 +116,29 @@ constructor(
 
     val appVersionName
         get() = buildConfigProvider.versionName
+
+    val isDfuCapable: StateFlow<Boolean> =
+        combine(ourNodeInfo, serviceRepository.connectionState) { node, connectionState -> Pair(node, connectionState) }
+            .flatMapLatest { (node, connectionState) ->
+                if (node == null || !connectionState.isConnected()) {
+                    flowOf(false)
+                } else if (radioPrefs.isBle() || radioPrefs.isSerial()) {
+                    val hwModel = node.user.hwModel.number
+                    val hw = deviceHardwareRepository.getDeviceHardwareByModel(hwModel).getOrNull()
+                    flow { emit(hw?.requiresDfu == true) }
+                } else {
+                    flowOf(false)
+                }
+            }
+            .stateInWhileSubscribed(initialValue = false)
+
+    // Device DB cache limit (bounded by DatabaseConstants)
+    val dbCacheLimit: StateFlow<Int> = databaseManager.cacheLimit
+
+    fun setDbCacheLimit(limit: Int) {
+        val clamped = limit.coerceIn(DatabaseConstants.MIN_CACHE_LIMIT, DatabaseConstants.MAX_CACHE_LIMIT)
+        databaseManager.setCacheLimit(clamped)
+    }
 
     fun setProvideLocation(value: Boolean) {
         myNodeNum?.let { uiPrefs.setShouldProvideNodeLocation(it, value) }

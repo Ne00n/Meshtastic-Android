@@ -17,15 +17,21 @@
 
 package com.geeksville.mesh.ui.contact
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.map
 import com.geeksville.mesh.model.Contact
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.getString
 import org.meshtastic.core.data.repository.NodeRepository
 import org.meshtastic.core.data.repository.PacketRepository
 import org.meshtastic.core.data.repository.RadioConfigRepository
@@ -34,17 +40,17 @@ import org.meshtastic.core.model.DataPacket
 import org.meshtastic.core.model.util.getChannel
 import org.meshtastic.core.model.util.getShortDate
 import org.meshtastic.core.service.ServiceRepository
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.channel_name
 import org.meshtastic.core.ui.viewmodel.stateInWhileSubscribed
 import org.meshtastic.proto.channelSet
 import javax.inject.Inject
-import kotlin.collections.map
-import org.meshtastic.core.strings.R as Res
+import kotlin.collections.map as collectionsMap
 
 @HiltViewModel
 class ContactsViewModel
 @Inject
 constructor(
-    @ApplicationContext private val context: Context,
     private val nodeRepository: NodeRepository,
     private val packetRepository: PacketRepository,
     radioConfigRepository: RadioConfigRepository,
@@ -56,6 +62,14 @@ constructor(
 
     val channels = radioConfigRepository.channelSetFlow.stateInWhileSubscribed(initialValue = channelSet {})
 
+    /**
+     * Non-paginated contact list.
+     *
+     * NOTE: This is kept for ShareScreen which needs a simple, non-paginated list of contacts. The main ContactsScreen
+     * uses [contactListPaged] instead for better performance with large contact lists.
+     *
+     * @see contactListPaged for the paginated version used in ContactsScreen
+     */
     val contactList =
         combine(
             nodeRepository.myNodeInfo,
@@ -72,7 +86,7 @@ constructor(
                     contactKey to Packet(0L, myNodeNum, 1, contactKey, 0L, true, data)
                 }
 
-            (contacts + (placeholder - contacts.keys)).values.map { packet ->
+            (contacts + (placeholder - contacts.keys)).values.collectionsMap { packet ->
                 val data = packet.data
                 val contactKey = packet.contact_key
 
@@ -87,7 +101,7 @@ constructor(
                 val shortName = user.shortName
                 val longName =
                     if (toBroadcast) {
-                        channelSet.getChannel(data.channel)?.name ?: context.getString(Res.string.channel_name)
+                        channelSet.getChannel(data.channel)?.name ?: getString(Res.string.channel_name)
                     } else {
                         user.longName
                     }
@@ -113,6 +127,58 @@ constructor(
         }
             .stateInWhileSubscribed(initialValue = emptyList())
 
+    val contactListPaged: Flow<PagingData<Contact>> =
+        combine(nodeRepository.myNodeInfo, channels, packetRepository.getContactSettings()) {
+                myNodeInfo,
+                channelSet,
+                settings,
+            ->
+            Triple(myNodeInfo?.myNodeNum, channelSet, settings)
+        }
+            .flatMapLatest { (myNodeNum, channelSet, settings) ->
+                packetRepository.getContactsPaged().map { pagingData ->
+                    pagingData.map { packet ->
+                        val data = packet.data
+                        val contactKey = packet.contact_key
+
+                        // Determine if this is my message (originated on this device)
+                        val fromLocal = data.from == DataPacket.ID_LOCAL
+                        val toBroadcast = data.to == DataPacket.ID_BROADCAST
+
+                        // grab usernames from NodeInfo
+                        val user = getUser(if (fromLocal) data.to else data.from)
+                        val node = getNode(if (fromLocal) data.to else data.from)
+
+                        val shortName = user.shortName
+                        val longName =
+                            if (toBroadcast) {
+                                channelSet.getChannel(data.channel)?.name ?: getString(Res.string.channel_name)
+                            } else {
+                                user.longName
+                            }
+
+                        Contact(
+                            contactKey = contactKey,
+                            shortName = if (toBroadcast) "${data.channel}" else shortName,
+                            longName = longName,
+                            lastMessageTime = getShortDate(data.time),
+                            lastMessageText = if (fromLocal) data.text else "$shortName: ${data.text}",
+                            unreadCount = runBlocking(Dispatchers.IO) { packetRepository.getUnreadCount(contactKey) },
+                            messageCount = runBlocking(Dispatchers.IO) { packetRepository.getMessageCount(contactKey) },
+                            isMuted = settings[contactKey]?.isMuted == true,
+                            isUnmessageable = user.isUnmessagable,
+                            nodeColors =
+                            if (!toBroadcast) {
+                                node.colors
+                            } else {
+                                null
+                            },
+                        )
+                    }
+                }
+            }
+            .cachedIn(viewModelScope)
+
     fun getNode(userId: String?) = nodeRepository.getNode(userId ?: DataPacket.ID_BROADCAST)
 
     fun deleteContacts(contacts: List<String>) =
@@ -122,6 +188,16 @@ constructor(
         viewModelScope.launch(Dispatchers.IO) { packetRepository.setMuteUntil(contacts, until) }
 
     fun getContactSettings() = packetRepository.getContactSettings()
+
+    /**
+     * Get the total message count for a list of contact keys. This queries the repository directly, so it works even if
+     * contacts aren't loaded in the paged list.
+     */
+    suspend fun getTotalMessageCount(contactKeys: List<String>): Int = if (contactKeys.isEmpty()) {
+        0
+    } else {
+        contactKeys.sumOf { contactKey -> packetRepository.getMessageCount(contactKey) }
+    }
 
     private fun getUser(userId: String?) = nodeRepository.getUser(userId ?: DataPacket.ID_BROADCAST)
 }

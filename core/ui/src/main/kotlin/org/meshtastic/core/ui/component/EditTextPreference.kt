@@ -38,13 +38,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.onFocusEvent
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import org.meshtastic.core.strings.R as Res
+import org.jetbrains.compose.resources.stringResource
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.error
 
 @Composable
 fun SignedIntegerEditTextPreference(
@@ -162,6 +163,7 @@ fun EditTextPreference(
     onValueChanged: (Double) -> Unit,
     modifier: Modifier = Modifier,
     summary: String? = null,
+    onFocusChanged: (FocusState) -> Unit = {},
 ) {
     var valueState by remember(value) { mutableStateOf(value.toString()) }
     val decimalSeparators = setOf('.', ',', '٫', '、', '·') // set of possible decimal separators
@@ -184,7 +186,7 @@ fun EditTextPreference(
                 }
             }
         },
-        onFocusChanged = {},
+        onFocusChanged = onFocusChanged,
         modifier = modifier,
     )
 }
