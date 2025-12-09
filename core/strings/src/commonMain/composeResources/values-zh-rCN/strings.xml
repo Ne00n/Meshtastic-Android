@@ -275,18 +275,10 @@
     <string name="quick_chat_show">显示快速聊天菜单</string>
     <string name="quick_chat_hide">隐藏快速聊天菜单</string>
     <string name="factory_reset">恢复出厂设置</string>
-<<<<<<< HEAD:core/strings/src/main/res/values-zh-rCN/strings.xml
-    <string name="bluetooth_disabled">Bluetooth is disabled. Please enable it in your device settings.</string>
-    <string name="disable_bluetooth">Disable Bluetooth</string>
-    <string name="open_settings">Open settings</string>
-    <string name="firmware_version">Firmware version: %1$s</string>
-    <string name="permission_missing_31">Meshtastic needs \"Nearby devices\" permissions enabled to find and connect to devices via Bluetooth. You can disable when not in use.</string>
-=======
     <string name="bluetooth_disabled">蓝牙已被禁用。请在您的设备设置中启用它。</string>
     <string name="open_settings">打开设置</string>
     <string name="firmware_version">固件版本</string>
     <string name="permission_missing_31">Meshtastic需要启用“附近的设备”权限，以便通过蓝牙查找并连接设备。不使用时，您可以将其禁用。</string>
->>>>>>> upstream/main:core/strings/src/commonMain/composeResources/values-zh-rCN/strings.xml
     <string name="direct_message">私信</string>
     <string name="nodedb_reset">重置节点数据库</string>
     <string name="delivery_confirmed">已送达</string>
