@@ -17,7 +17,12 @@
 
 package org.meshtastic.feature.settings.radio.component
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandIn
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkOut
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -27,14 +32,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.google.protobuf.MessageLite
-import org.meshtastic.core.strings.R
+import org.jetbrains.compose.resources.stringResource
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.discard_changes
+import org.meshtastic.core.strings.save_changes
 import org.meshtastic.core.ui.component.MainAppBar
 import org.meshtastic.core.ui.component.PreferenceFooter
 import org.meshtastic.feature.settings.radio.ResponseState
 
+@Suppress("LongMethod")
 @Composable
 fun <T : MessageLite> RadioConfigScreenList(
     title: String,
@@ -44,6 +52,9 @@ fun <T : MessageLite> RadioConfigScreenList(
     configState: ConfigState<T>,
     enabled: Boolean,
     onSave: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    additionalDirtyCheck: () -> Boolean = { false },
+    onDiscard: () -> Unit = {},
     content: LazyListScope.() -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
@@ -53,6 +64,7 @@ fun <T : MessageLite> RadioConfigScreenList(
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             MainAppBar(
                 title = title,
@@ -65,24 +77,37 @@ fun <T : MessageLite> RadioConfigScreenList(
             )
         },
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding)) {
-            LazyColumn(modifier = Modifier.fillMaxSize().weight(1f), contentPadding = PaddingValues(16.dp)) {
-                content()
-            }
+        val showFooterButtons = configState.isDirty || additionalDirtyCheck()
 
-            PreferenceFooter(
-                enabled = enabled && configState.isDirty,
-                negativeText = stringResource(R.string.discard_changes),
-                onNegativeClicked = {
-                    focusManager.clearFocus()
-                    configState.reset()
-                },
-                positiveText = stringResource(R.string.save_changes),
-                onPositiveClicked = {
-                    focusManager.clearFocus()
-                    onSave(configState.value)
-                },
-            )
+        LazyColumn(
+            modifier = Modifier.padding(innerPadding).fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            content()
+
+            item {
+                AnimatedVisibility(
+                    visible = showFooterButtons,
+                    enter = fadeIn() + expandIn(),
+                    exit = fadeOut() + shrinkOut(),
+                ) {
+                    PreferenceFooter(
+                        enabled = enabled && showFooterButtons,
+                        negativeText = stringResource(Res.string.discard_changes),
+                        onNegativeClicked = {
+                            focusManager.clearFocus()
+                            configState.reset()
+                            onDiscard()
+                        },
+                        positiveText = stringResource(Res.string.save_changes),
+                        onPositiveClicked = {
+                            focusManager.clearFocus()
+                            onSave(configState.value)
+                        },
+                    )
+                }
+            }
         }
     }
 }

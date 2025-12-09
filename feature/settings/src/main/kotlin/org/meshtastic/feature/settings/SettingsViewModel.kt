@@ -24,29 +24,36 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.meshtastic.core.common.BuildConfigProvider
+import org.meshtastic.core.data.repository.DeviceHardwareRepository
 import org.meshtastic.core.data.repository.MeshLogRepository
 import org.meshtastic.core.data.repository.NodeRepository
 import org.meshtastic.core.data.repository.RadioConfigRepository
+import org.meshtastic.core.database.DatabaseConstants
+import org.meshtastic.core.database.DatabaseManager
 import org.meshtastic.core.database.entity.MyNodeEntity
 import org.meshtastic.core.database.model.Node
 import org.meshtastic.core.datastore.UiPreferencesDataSource
 import org.meshtastic.core.model.Position
 import org.meshtastic.core.model.util.positionToMeter
+import org.meshtastic.core.prefs.radio.RadioPrefs
+import org.meshtastic.core.prefs.radio.isBle
+import org.meshtastic.core.prefs.radio.isSerial
 import org.meshtastic.core.prefs.ui.UiPrefs
 import org.meshtastic.core.service.IMeshService
 import org.meshtastic.core.service.ServiceRepository
+import org.meshtastic.core.ui.viewmodel.stateInWhileSubscribed
 import org.meshtastic.proto.LocalOnlyProtos.LocalConfig
 import org.meshtastic.proto.MeshProtos
 import org.meshtastic.proto.Portnums
@@ -72,6 +79,9 @@ constructor(
     private val uiPrefs: UiPrefs,
     private val uiPreferencesDataSource: UiPreferencesDataSource,
     private val buildConfigProvider: BuildConfigProvider,
+    private val databaseManager: DatabaseManager,
+    private val deviceHardwareRepository: DeviceHardwareRepository,
+    private val radioPrefs: RadioPrefs,
 ) : ViewModel() {
     val myNodeInfo: StateFlow<MyNodeEntity?> = nodeRepository.myNodeInfo
 
@@ -81,16 +91,10 @@ constructor(
     val ourNodeInfo: StateFlow<Node?> = nodeRepository.ourNodeInfo
 
     val isConnected =
-        serviceRepository.connectionState
-            .map { it.isConnected() }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), false)
+        serviceRepository.connectionState.map { it.isConnected() }.stateInWhileSubscribed(initialValue = false)
 
     val localConfig: StateFlow<LocalConfig> =
-        radioConfigRepository.localConfigFlow.stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000L),
-            LocalConfig.getDefaultInstance(),
-        )
+        radioConfigRepository.localConfigFlow.stateInWhileSubscribed(initialValue = LocalConfig.getDefaultInstance())
 
     val meshService: IMeshService?
         get() = serviceRepository.meshService
@@ -105,13 +109,36 @@ constructor(
                     uiPrefs.shouldProvideNodeLocation(myNodeEntity.myNodeNum)
                 }
             }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+            .stateInWhileSubscribed(initialValue = false)
 
     private val _excludedModulesUnlocked = MutableStateFlow(false)
     val excludedModulesUnlocked: StateFlow<Boolean> = _excludedModulesUnlocked.asStateFlow()
 
     val appVersionName
         get() = buildConfigProvider.versionName
+
+    val isDfuCapable: StateFlow<Boolean> =
+        combine(ourNodeInfo, serviceRepository.connectionState) { node, connectionState -> Pair(node, connectionState) }
+            .flatMapLatest { (node, connectionState) ->
+                if (node == null || !connectionState.isConnected()) {
+                    flowOf(false)
+                } else if (radioPrefs.isBle() || radioPrefs.isSerial()) {
+                    val hwModel = node.user.hwModel.number
+                    val hw = deviceHardwareRepository.getDeviceHardwareByModel(hwModel).getOrNull()
+                    flow { emit(hw?.requiresDfu == true) }
+                } else {
+                    flowOf(false)
+                }
+            }
+            .stateInWhileSubscribed(initialValue = false)
+
+    // Device DB cache limit (bounded by DatabaseConstants)
+    val dbCacheLimit: StateFlow<Int> = databaseManager.cacheLimit
+
+    fun setDbCacheLimit(limit: Int) {
+        val clamped = limit.coerceIn(DatabaseConstants.MIN_CACHE_LIMIT, DatabaseConstants.MAX_CACHE_LIMIT)
+        databaseManager.setCacheLimit(clamped)
+    }
 
     fun setProvideLocation(value: Boolean) {
         myNodeNum?.let { uiPrefs.setShouldProvideNodeLocation(it, value) }
@@ -149,8 +176,10 @@ constructor(
             // Capture the current node value while we're still on main thread
             val nodes = nodeRepository.nodeDBbyNum.value
 
+            // Converts a MeshProtos.Position (nullable) to a Position, but only if it's valid, otherwise returns null.
+            // The returned Position is guaranteed to be non-null and valid, or null if the input was null or invalid.
             val positionToPos: (MeshProtos.Position?) -> Position? = { meshPosition ->
-                meshPosition?.let { Position(it) }.takeIf { it?.isValid() == true }
+                meshPosition?.let { Position(it) }?.takeIf { it.isValid() }
             }
 
             writeToUri(uri) { writer ->
@@ -158,7 +187,7 @@ constructor(
 
                 @Suppress("MaxLineLength")
                 writer.appendLine(
-                    "\"date\",\"time\",\"from\",\"sender name\",\"sender lat\",\"sender long\",\"rx lat\",\"rx long\",\"rx elevation\",\"rx snr\",\"distance\",\"hop limit\",\"payload\"",
+                    "\"date\",\"time\",\"from\",\"sender name\",\"sender lat\",\"sender long\",\"rx lat\",\"rx long\",\"rx elevation\",\"rx snr\",\"distance(m)\",\"hop limit\",\"payload\"",
                 )
 
                 // Packets are ordered by time, we keep most recent position of

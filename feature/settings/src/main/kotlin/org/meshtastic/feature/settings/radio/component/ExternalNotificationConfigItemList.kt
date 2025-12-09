@@ -17,24 +17,58 @@
 
 package org.meshtastic.feature.settings.radio.component
 
+import android.media.MediaPlayer
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import org.meshtastic.core.strings.R
+import org.jetbrains.compose.resources.stringResource
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.advanced
+import org.meshtastic.core.strings.alert_bell_buzzer
+import org.meshtastic.core.strings.alert_bell_led
+import org.meshtastic.core.strings.alert_bell_vibra
+import org.meshtastic.core.strings.alert_message_buzzer
+import org.meshtastic.core.strings.alert_message_led
+import org.meshtastic.core.strings.alert_message_vibra
+import org.meshtastic.core.strings.external_notification
+import org.meshtastic.core.strings.external_notification_config
+import org.meshtastic.core.strings.external_notification_enabled
+import org.meshtastic.core.strings.import_label
+import org.meshtastic.core.strings.nag_timeout_seconds
+import org.meshtastic.core.strings.notifications_on_alert_bell_receipt
+import org.meshtastic.core.strings.notifications_on_message_receipt
+import org.meshtastic.core.strings.output_buzzer_gpio
+import org.meshtastic.core.strings.output_duration_milliseconds
+import org.meshtastic.core.strings.output_led_active_high
+import org.meshtastic.core.strings.output_led_gpio
+import org.meshtastic.core.strings.output_vibra_gpio
+import org.meshtastic.core.strings.play
+import org.meshtastic.core.strings.ringtone
+import org.meshtastic.core.strings.use_i2s_as_buzzer
+import org.meshtastic.core.strings.use_pwm_buzzer
 import org.meshtastic.core.ui.component.DropDownPreference
 import org.meshtastic.core.ui.component.EditTextPreference
 import org.meshtastic.core.ui.component.SwitchPreference
@@ -45,23 +79,59 @@ import org.meshtastic.feature.settings.util.gpioPins
 import org.meshtastic.feature.settings.util.toDisplayString
 import org.meshtastic.proto.copy
 import org.meshtastic.proto.moduleConfig
+import timber.log.Timber
+import java.io.File
 
+private const val MAX_RINGTONE_SIZE = 230
+
+@Suppress("LongMethod", "TooGenericExceptionCaught")
 @Composable
-fun ExternalNotificationConfigScreen(navController: NavController, viewModel: RadioConfigViewModel = hiltViewModel()) {
+fun ExternalNotificationConfigScreen(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: RadioConfigViewModel = hiltViewModel(),
+) {
     val state by viewModel.radioConfigState.collectAsStateWithLifecycle()
     val extNotificationConfig = state.moduleConfig.externalNotification
     val ringtone = state.ringtone
     val formState = rememberConfigState(initialValue = extNotificationConfig)
     var ringtoneInput by rememberSaveable(ringtone) { mutableStateOf(ringtone) }
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
+
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            uri?.let {
+                try {
+                    context.contentResolver.openInputStream(it)?.use { stream ->
+                        stream.bufferedReader().use { reader ->
+                            val buffer = CharArray(MAX_RINGTONE_SIZE)
+                            val read = reader.read(buffer)
+                            if (read > 0) {
+                                ringtoneInput = String(buffer, 0, read)
+                                Toast.makeText(context, "Imported ringtone", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "File is empty", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Error importing ringtone")
+                    Toast.makeText(context, "Error importing: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
 
     RadioConfigScreenList(
-        title = stringResource(id = R.string.external_notification),
-        onBack = { navController.popBackStack() },
+        modifier = modifier,
+        title = stringResource(Res.string.external_notification),
+        onBack = onBack,
         configState = formState,
         enabled = state.connected,
         responseState = state.responseState,
         onDismissPacketResponse = viewModel::clearPacketResponse,
+        additionalDirtyCheck = { ringtoneInput != ringtone },
+        onDiscard = { ringtoneInput = ringtone },
         onSave = {
             if (ringtoneInput != ringtone) {
                 viewModel.setRingtone(ringtoneInput)
@@ -73,9 +143,9 @@ fun ExternalNotificationConfigScreen(navController: NavController, viewModel: Ra
         },
     ) {
         item {
-            TitledCard(title = stringResource(R.string.external_notification_config)) {
+            TitledCard(title = stringResource(Res.string.external_notification_config)) {
                 SwitchPreference(
-                    title = stringResource(R.string.external_notification_enabled),
+                    title = stringResource(Res.string.external_notification_enabled),
                     checked = formState.value.enabled,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { this.enabled = it } },
@@ -85,9 +155,9 @@ fun ExternalNotificationConfigScreen(navController: NavController, viewModel: Ra
         }
 
         item {
-            TitledCard(title = stringResource(R.string.notifications_on_message_receipt)) {
+            TitledCard(title = stringResource(Res.string.notifications_on_message_receipt)) {
                 SwitchPreference(
-                    title = stringResource(R.string.alert_message_led),
+                    title = stringResource(Res.string.alert_message_led),
                     checked = formState.value.alertMessage,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { alertMessage = it } },
@@ -95,7 +165,7 @@ fun ExternalNotificationConfigScreen(navController: NavController, viewModel: Ra
                 )
                 HorizontalDivider()
                 SwitchPreference(
-                    title = stringResource(R.string.alert_message_buzzer),
+                    title = stringResource(Res.string.alert_message_buzzer),
                     checked = formState.value.alertMessageBuzzer,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { alertMessageBuzzer = it } },
@@ -103,7 +173,7 @@ fun ExternalNotificationConfigScreen(navController: NavController, viewModel: Ra
                 )
                 HorizontalDivider()
                 SwitchPreference(
-                    title = stringResource(R.string.alert_message_vibra),
+                    title = stringResource(Res.string.alert_message_vibra),
                     checked = formState.value.alertMessageVibra,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { alertMessageVibra = it } },
@@ -113,9 +183,9 @@ fun ExternalNotificationConfigScreen(navController: NavController, viewModel: Ra
         }
 
         item {
-            TitledCard(title = stringResource(R.string.notifications_on_alert_bell_receipt)) {
+            TitledCard(title = stringResource(Res.string.notifications_on_alert_bell_receipt)) {
                 SwitchPreference(
-                    title = stringResource(R.string.alert_bell_led),
+                    title = stringResource(Res.string.alert_bell_led),
                     checked = formState.value.alertBell,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { alertBell = it } },
@@ -123,7 +193,7 @@ fun ExternalNotificationConfigScreen(navController: NavController, viewModel: Ra
                 )
                 HorizontalDivider()
                 SwitchPreference(
-                    title = stringResource(R.string.alert_bell_buzzer),
+                    title = stringResource(Res.string.alert_bell_buzzer),
                     checked = formState.value.alertBellBuzzer,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { alertBellBuzzer = it } },
@@ -131,7 +201,7 @@ fun ExternalNotificationConfigScreen(navController: NavController, viewModel: Ra
                 )
                 HorizontalDivider()
                 SwitchPreference(
-                    title = stringResource(R.string.alert_bell_vibra),
+                    title = stringResource(Res.string.alert_bell_vibra),
                     checked = formState.value.alertBellVibra,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { alertBellVibra = it } },
@@ -141,10 +211,10 @@ fun ExternalNotificationConfigScreen(navController: NavController, viewModel: Ra
         }
 
         item {
-            TitledCard(title = stringResource(R.string.advanced)) {
+            TitledCard(title = stringResource(Res.string.advanced)) {
                 val gpio = remember { gpioPins }
                 DropDownPreference(
-                    title = stringResource(R.string.output_led_gpio),
+                    title = stringResource(Res.string.output_led_gpio),
                     items = gpio,
                     selectedItem = formState.value.output,
                     enabled = state.connected,
@@ -153,7 +223,7 @@ fun ExternalNotificationConfigScreen(navController: NavController, viewModel: Ra
                 if (formState.value.output != 0) {
                     HorizontalDivider()
                     SwitchPreference(
-                        title = stringResource(R.string.output_led_active_high),
+                        title = stringResource(Res.string.output_led_active_high),
                         checked = formState.value.active,
                         enabled = state.connected,
                         onCheckedChange = { formState.value = formState.value.copy { active = it } },
@@ -162,7 +232,7 @@ fun ExternalNotificationConfigScreen(navController: NavController, viewModel: Ra
                 }
                 HorizontalDivider()
                 DropDownPreference(
-                    title = stringResource(R.string.output_buzzer_gpio),
+                    title = stringResource(Res.string.output_buzzer_gpio),
                     items = gpio,
                     selectedItem = formState.value.outputBuzzer,
                     enabled = state.connected,
@@ -171,7 +241,7 @@ fun ExternalNotificationConfigScreen(navController: NavController, viewModel: Ra
                 if (formState.value.outputBuzzer != 0) {
                     HorizontalDivider()
                     SwitchPreference(
-                        title = stringResource(R.string.use_pwm_buzzer),
+                        title = stringResource(Res.string.use_pwm_buzzer),
                         checked = formState.value.usePwm,
                         enabled = state.connected,
                         onCheckedChange = { formState.value = formState.value.copy { usePwm = it } },
@@ -180,7 +250,7 @@ fun ExternalNotificationConfigScreen(navController: NavController, viewModel: Ra
                 }
                 HorizontalDivider()
                 DropDownPreference(
-                    title = stringResource(R.string.output_vibra_gpio),
+                    title = stringResource(Res.string.output_vibra_gpio),
                     items = gpio,
                     selectedItem = formState.value.outputVibra,
                     enabled = state.connected,
@@ -189,36 +259,68 @@ fun ExternalNotificationConfigScreen(navController: NavController, viewModel: Ra
                 HorizontalDivider()
                 val outputItems = remember { IntervalConfiguration.OUTPUT.allowedIntervals }
                 DropDownPreference(
-                    title = stringResource(R.string.output_duration_milliseconds),
+                    title = stringResource(Res.string.output_duration_milliseconds),
                     items = outputItems.map { it.value to it.toDisplayString() },
-                    selectedItem = formState.value.outputMs,
+                    selectedItem = formState.value.outputMs.toLong(),
                     enabled = state.connected,
                     onItemSelected = { formState.value = formState.value.copy { outputMs = it.toInt() } },
                 )
                 HorizontalDivider()
                 val nagItems = remember { IntervalConfiguration.NAG_TIMEOUT.allowedIntervals }
                 DropDownPreference(
-                    title = stringResource(R.string.nag_timeout_seconds),
+                    title = stringResource(Res.string.nag_timeout_seconds),
                     items = nagItems.map { it.value to it.toDisplayString() },
-                    selectedItem = formState.value.nagTimeout,
+                    selectedItem = formState.value.nagTimeout.toLong(),
                     enabled = state.connected,
                     onItemSelected = { formState.value = formState.value.copy { nagTimeout = it.toInt() } },
                 )
                 HorizontalDivider()
                 EditTextPreference(
-                    title = stringResource(R.string.ringtone),
+                    title = stringResource(Res.string.ringtone),
                     value = ringtoneInput,
-                    maxSize = 230, // ringtone max_size:231
+                    maxSize = MAX_RINGTONE_SIZE,
                     enabled = state.connected,
                     isError = false,
                     keyboardOptions =
                     KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text, imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                     onValueChanged = { ringtoneInput = it },
+                    trailingIcon = {
+                        Row {
+                            IconButton(onClick = { launcher.launch("*/*") }, enabled = state.connected) {
+                                Icon(
+                                    Icons.Default.FolderOpen,
+                                    contentDescription = stringResource(Res.string.import_label),
+                                )
+                            }
+
+                            IconButton(
+                                onClick = {
+                                    try {
+                                        val tempFile = File.createTempFile("ringtone", ".rtttl", context.cacheDir)
+                                        tempFile.writeText(ringtoneInput)
+                                        val mediaPlayer = MediaPlayer()
+                                        mediaPlayer.setDataSource(tempFile.absolutePath)
+                                        mediaPlayer.prepare()
+                                        mediaPlayer.start()
+                                        mediaPlayer.setOnCompletionListener {
+                                            it.release()
+                                            tempFile.delete()
+                                        }
+                                    } catch (e: Exception) {
+                                        Timber.e(e, "Failed to play ringtone")
+                                    }
+                                },
+                                enabled = state.connected,
+                            ) {
+                                Icon(Icons.Default.PlayArrow, contentDescription = stringResource(Res.string.play))
+                            }
+                        }
+                    },
                 )
                 HorizontalDivider()
                 SwitchPreference(
-                    title = stringResource(R.string.use_i2s_as_buzzer),
+                    title = stringResource(Res.string.use_i2s_as_buzzer),
                     checked = formState.value.useI2SAsBuzzer,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { useI2SAsBuzzer = it } },

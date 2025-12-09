@@ -23,11 +23,16 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import org.meshtastic.core.strings.R
+import org.jetbrains.compose.resources.stringResource
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.config_device_transmitOverLora_summary
+import org.meshtastic.core.strings.neighbor_info
+import org.meshtastic.core.strings.neighbor_info_config
+import org.meshtastic.core.strings.neighbor_info_enabled
+import org.meshtastic.core.strings.transmit_over_lora
+import org.meshtastic.core.strings.update_interval_seconds
 import org.meshtastic.core.ui.component.EditTextPreference
 import org.meshtastic.core.ui.component.SwitchPreference
 import org.meshtastic.core.ui.component.TitledCard
@@ -36,15 +41,15 @@ import org.meshtastic.proto.copy
 import org.meshtastic.proto.moduleConfig
 
 @Composable
-fun NeighborInfoConfigScreen(navController: NavController, viewModel: RadioConfigViewModel = hiltViewModel()) {
+fun NeighborInfoConfigScreen(viewModel: RadioConfigViewModel = hiltViewModel(), onBack: () -> Unit) {
     val state by viewModel.radioConfigState.collectAsStateWithLifecycle()
     val neighborInfoConfig = state.moduleConfig.neighborInfo
     val formState = rememberConfigState(initialValue = neighborInfoConfig)
     val focusManager = LocalFocusManager.current
 
     RadioConfigScreenList(
-        title = stringResource(id = R.string.neighbor_info),
-        onBack = { navController.popBackStack() },
+        title = stringResource(Res.string.neighbor_info),
+        onBack = onBack,
         configState = formState,
         enabled = state.connected,
         responseState = state.responseState,
@@ -55,9 +60,9 @@ fun NeighborInfoConfigScreen(navController: NavController, viewModel: RadioConfi
         },
     ) {
         item {
-            TitledCard(title = stringResource(R.string.neighbor_info_config)) {
+            TitledCard(title = stringResource(Res.string.neighbor_info_config)) {
                 SwitchPreference(
-                    title = stringResource(R.string.neighbor_info_enabled),
+                    title = stringResource(Res.string.neighbor_info_enabled),
                     checked = formState.value.enabled,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { this.enabled = it } },
@@ -65,7 +70,7 @@ fun NeighborInfoConfigScreen(navController: NavController, viewModel: RadioConfi
                 )
                 HorizontalDivider()
                 EditTextPreference(
-                    title = stringResource(R.string.update_interval_seconds),
+                    title = stringResource(Res.string.update_interval_seconds),
                     value = formState.value.updateInterval,
                     enabled = state.connected,
                     keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
@@ -73,8 +78,8 @@ fun NeighborInfoConfigScreen(navController: NavController, viewModel: RadioConfi
                 )
                 HorizontalDivider()
                 SwitchPreference(
-                    title = stringResource(R.string.transmit_over_lora),
-                    summary = stringResource(id = R.string.config_device_transmitOverLora_summary),
+                    title = stringResource(Res.string.transmit_over_lora),
+                    summary = stringResource(Res.string.config_device_transmitOverLora_summary),
                     checked = formState.value.transmitOverLora,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { transmitOverLora = it } },

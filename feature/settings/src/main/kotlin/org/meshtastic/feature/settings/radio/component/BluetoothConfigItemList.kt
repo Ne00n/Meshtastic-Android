@@ -23,11 +23,15 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import org.meshtastic.core.strings.R
+import org.jetbrains.compose.resources.stringResource
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.bluetooth
+import org.meshtastic.core.strings.bluetooth_config
+import org.meshtastic.core.strings.bluetooth_enabled
+import org.meshtastic.core.strings.fixed_pin
+import org.meshtastic.core.strings.pairing_mode
 import org.meshtastic.core.ui.component.DropDownPreference
 import org.meshtastic.core.ui.component.EditTextPreference
 import org.meshtastic.core.ui.component.SwitchPreference
@@ -38,15 +42,15 @@ import org.meshtastic.proto.config
 import org.meshtastic.proto.copy
 
 @Composable
-fun BluetoothConfigScreen(navController: NavController, viewModel: RadioConfigViewModel = hiltViewModel()) {
+fun BluetoothConfigScreen(viewModel: RadioConfigViewModel = hiltViewModel(), onBack: () -> Unit) {
     val state by viewModel.radioConfigState.collectAsStateWithLifecycle()
     val bluetoothConfig = state.radioConfig.bluetooth
     val formState = rememberConfigState(initialValue = bluetoothConfig)
     val focusManager = LocalFocusManager.current
 
     RadioConfigScreenList(
-        title = stringResource(id = R.string.bluetooth),
-        onBack = { navController.popBackStack() },
+        title = stringResource(Res.string.bluetooth),
+        onBack = onBack,
         configState = formState,
         enabled = state.connected,
         responseState = state.responseState,
@@ -57,9 +61,9 @@ fun BluetoothConfigScreen(navController: NavController, viewModel: RadioConfigVi
         },
     ) {
         item {
-            TitledCard(title = stringResource(R.string.bluetooth_config)) {
+            TitledCard(title = stringResource(Res.string.bluetooth_config)) {
                 SwitchPreference(
-                    title = stringResource(R.string.bluetooth_enabled),
+                    title = stringResource(Res.string.bluetooth_enabled),
                     checked = formState.value.enabled,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { this.enabled = it } },
@@ -67,7 +71,7 @@ fun BluetoothConfigScreen(navController: NavController, viewModel: RadioConfigVi
                 )
                 HorizontalDivider()
                 DropDownPreference(
-                    title = stringResource(R.string.pairing_mode),
+                    title = stringResource(Res.string.pairing_mode),
                     enabled = state.connected,
                     items =
                     BluetoothConfig.PairingMode.entries
@@ -78,7 +82,7 @@ fun BluetoothConfigScreen(navController: NavController, viewModel: RadioConfigVi
                 )
                 HorizontalDivider()
                 EditTextPreference(
-                    title = stringResource(R.string.fixed_pin),
+                    title = stringResource(Res.string.fixed_pin),
                     value = formState.value.fixedPin,
                     enabled = state.connected,
                     keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),

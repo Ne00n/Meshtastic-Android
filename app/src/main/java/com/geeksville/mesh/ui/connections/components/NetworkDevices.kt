@@ -17,7 +17,6 @@
 
 package com.geeksville.mesh.ui.connections.components
 
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,7 +45,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -56,9 +54,18 @@ import com.geeksville.mesh.model.DeviceListEntry
 import com.geeksville.mesh.repository.network.NetworkRepository
 import com.geeksville.mesh.ui.connections.isIPAddress
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import org.meshtastic.core.service.ConnectionState
-import org.meshtastic.core.strings.R
-import org.meshtastic.core.ui.component.TitledCard
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.add_network_device
+import org.meshtastic.core.strings.cancel
+import org.meshtastic.core.strings.confirm_forget_connection
+import org.meshtastic.core.strings.discovered_network_devices
+import org.meshtastic.core.strings.forget_connection
+import org.meshtastic.core.strings.ip_address
+import org.meshtastic.core.strings.ip_port
+import org.meshtastic.core.strings.no_network_devices
+import org.meshtastic.core.strings.recent_network_devices
 import org.meshtastic.core.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,7 +100,10 @@ fun NetworkDevices(
         deviceToDelete?.let {
             ConfirmDeleteDialog(
                 it.fullAddress,
-                onHideDialog = { showDeleteDialog = false },
+                onHideDialog = {
+                    showDeleteDialog = false
+                    deviceToDelete = null
+                },
                 onConfirm = { deviceFullAddress -> scanModel.removeRecentAddress(deviceFullAddress) },
             )
         }
@@ -102,8 +112,11 @@ fun NetworkDevices(
     Column(verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         val addButton: @Composable () -> Unit = {
             Button(onClick = { showSearchDialog = true }) {
-                Icon(imageVector = Icons.Rounded.Add, contentDescription = stringResource(R.string.add_network_device))
-                Text(stringResource(R.string.add_network_device))
+                Icon(
+                    imageVector = Icons.Rounded.Add,
+                    contentDescription = stringResource(Res.string.add_network_device),
+                )
+                Text(stringResource(Res.string.add_network_device))
             }
         }
 
@@ -111,46 +124,32 @@ fun NetworkDevices(
             discoveredNetworkDevices.isEmpty() && recentNetworkDevices.isEmpty() -> {
                 EmptyStateContent(
                     imageVector = Icons.Rounded.Wifi,
-                    text = stringResource(R.string.no_network_devices),
+                    text = stringResource(Res.string.no_network_devices),
                     actionButton = addButton,
                 )
             }
 
             else -> {
                 if (recentNetworkDevices.isNotEmpty()) {
-                    TitledCard(title = stringResource(R.string.recent_network_devices)) {
-                        recentNetworkDevices.forEach { device ->
-                            DeviceListItem(
-                                connected =
-                                connectionState == ConnectionState.CONNECTED &&
-                                    device.fullAddress == selectedDevice,
-                                device = device,
-                                onSelect = { scanModel.onSelected(device) },
-                                modifier =
-                                Modifier.combinedClickable(
-                                    onClick = { scanModel.onSelected(device) },
-                                    onLongClick = {
-                                        deviceToDelete = device
-                                        showDeleteDialog = true
-                                    },
-                                ),
-                            )
-                        }
-                    }
+                    recentNetworkDevices.DeviceListSection(
+                        title = stringResource(Res.string.recent_network_devices),
+                        connectionState = connectionState,
+                        selectedDevice = selectedDevice,
+                        onSelect = scanModel::onSelected,
+                        onDelete = { device ->
+                            deviceToDelete = device
+                            showDeleteDialog = true
+                        },
+                    )
                 }
 
                 if (discoveredNetworkDevices.isNotEmpty()) {
-                    TitledCard(title = stringResource(R.string.discovered_network_devices)) {
-                        discoveredNetworkDevices.forEach { device ->
-                            DeviceListItem(
-                                connected =
-                                connectionState == ConnectionState.CONNECTED &&
-                                    device.fullAddress == selectedDevice,
-                                device = device,
-                                onSelect = { scanModel.onSelected(device) },
-                            )
-                        }
-                    }
+                    discoveredNetworkDevices.DeviceListSection(
+                        title = stringResource(Res.string.discovered_network_devices),
+                        connectionState = connectionState,
+                        selectedDevice = selectedDevice,
+                        onSelect = scanModel::onSelected,
+                    )
                 }
 
                 addButton()
@@ -179,7 +178,7 @@ private fun AddDeviceDialog(
                     state = ipState,
                     labelPosition = TextFieldLabelPosition.Above(),
                     lineLimits = TextFieldLineLimits.SingleLine,
-                    label = { Text(stringResource(R.string.ip_address)) },
+                    label = { Text(stringResource(Res.string.ip_address)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
                     modifier = Modifier.weight(.7f),
                 )
@@ -189,7 +188,7 @@ private fun AddDeviceDialog(
                     labelPosition = TextFieldLabelPosition.Above(),
                     placeholder = { Text(NetworkRepository.SERVICE_PORT.toString()) },
                     lineLimits = TextFieldLineLimits.SingleLine,
-                    label = { Text(stringResource(R.string.ip_port)) },
+                    label = { Text(stringResource(Res.string.ip_port)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
                     modifier = Modifier.weight(.3f),
                 )
@@ -197,7 +196,7 @@ private fun AddDeviceDialog(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(modifier = Modifier.weight(1f), onClick = { onHideDialog() }) {
-                    Text(stringResource(R.string.cancel))
+                    Text(stringResource(Res.string.cancel))
                 }
 
                 Button(
@@ -226,7 +225,7 @@ private fun AddDeviceDialog(
                         }
                     },
                 ) {
-                    Text(stringResource(R.string.add_network_device))
+                    Text(stringResource(Res.string.add_network_device))
                 }
             }
         }
@@ -241,8 +240,8 @@ private fun ConfirmDeleteDialog(
 ) {
     AlertDialog(
         onDismissRequest = onHideDialog,
-        title = { Text(stringResource(R.string.delete)) },
-        text = { Text(stringResource(R.string.confirm_delete_node)) },
+        title = { Text(stringResource(Res.string.forget_connection)) },
+        text = { Text(stringResource(Res.string.confirm_forget_connection)) },
         confirmButton = {
             Button(
                 onClick = {
@@ -250,10 +249,10 @@ private fun ConfirmDeleteDialog(
                     onHideDialog()
                 },
             ) {
-                Text(stringResource(R.string.delete))
+                Text(stringResource(Res.string.forget_connection))
             }
         },
-        dismissButton = { Button(onClick = { onHideDialog() }) { Text(stringResource(R.string.cancel)) } },
+        dismissButton = { Button(onClick = { onHideDialog() }) { Text(stringResource(Res.string.cancel)) } },
     )
 }
 

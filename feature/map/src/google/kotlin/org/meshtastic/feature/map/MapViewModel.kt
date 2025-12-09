@@ -22,8 +22,11 @@ import android.net.Uri
 import androidx.core.net.toFile
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.TileProvider
 import com.google.android.gms.maps.model.UrlTileProvider
+import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.data.geojson.GeoJsonLayer
 import com.google.maps.android.data.kml.KmlLayer
@@ -32,13 +35,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -53,6 +54,7 @@ import org.meshtastic.core.datastore.UiPreferencesDataSource
 import org.meshtastic.core.prefs.map.GoogleMapsPrefs
 import org.meshtastic.core.prefs.map.MapPrefs
 import org.meshtastic.core.service.ServiceRepository
+import org.meshtastic.core.ui.viewmodel.stateInWhileSubscribed
 import org.meshtastic.proto.ConfigProtos
 import timber.log.Timber
 import java.io.File
@@ -91,15 +93,31 @@ constructor(
     uiPreferencesDataSource: UiPreferencesDataSource,
 ) : BaseMapViewModel(mapPrefs, nodeRepository, packetRepository, serviceRepository) {
 
+    private val targetLatLng =
+        googleMapsPrefs.cameraTargetLat
+            .takeIf { it != 0.0 }
+            ?.let { lat -> googleMapsPrefs.cameraTargetLng.takeIf { it != 0.0 }?.let { lng -> LatLng(lat, lng) } }
+            ?: ourNodeInfo.value?.position?.toLatLng()
+            ?: LatLng(0.0, 0.0)
+
+    val cameraPositionState =
+        CameraPositionState(
+            position =
+            CameraPosition(
+                targetLatLng,
+                googleMapsPrefs.cameraZoom,
+                googleMapsPrefs.cameraTilt,
+                googleMapsPrefs.cameraBearing,
+            ),
+        )
+
     val theme: StateFlow<Int> = uiPreferencesDataSource.theme
 
     private val _errorFlow = MutableSharedFlow<String>()
     val errorFlow: SharedFlow<String> = _errorFlow.asSharedFlow()
 
     val customTileProviderConfigs: StateFlow<List<CustomTileProviderConfig>> =
-        customTileProviderRepository
-            .getCustomTileProviders()
-            .stateIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = emptyList())
+        customTileProviderRepository.getCustomTileProviders().stateInWhileSubscribed(initialValue = emptyList())
 
     private val _selectedCustomTileProviderUrl = MutableStateFlow<String?>(null)
     val selectedCustomTileProviderUrl: StateFlow<String?> = _selectedCustomTileProviderUrl.asStateFlow()
@@ -110,11 +128,7 @@ constructor(
     val displayUnits =
         radioConfigRepository.deviceProfileFlow
             .mapNotNull { it.config.display.units }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = ConfigProtos.Config.DisplayConfig.DisplayUnits.METRIC,
-            )
+            .stateInWhileSubscribed(initialValue = ConfigProtos.Config.DisplayConfig.DisplayUnits.METRIC)
 
     fun addCustomTileProvider(name: String, urlTemplate: String) {
         viewModelScope.launch {
@@ -243,6 +257,16 @@ constructor(
             loadPersistedMapType()
         }
         loadPersistedLayers()
+    }
+
+    fun saveCameraPosition(cameraPosition: CameraPosition) {
+        viewModelScope.launch {
+            googleMapsPrefs.cameraTargetLat = cameraPosition.target.latitude
+            googleMapsPrefs.cameraTargetLng = cameraPosition.target.longitude
+            googleMapsPrefs.cameraZoom = cameraPosition.zoom
+            googleMapsPrefs.cameraTilt = cameraPosition.tilt
+            googleMapsPrefs.cameraBearing = cameraPosition.bearing
+        }
     }
 
     private fun loadPersistedMapType() {

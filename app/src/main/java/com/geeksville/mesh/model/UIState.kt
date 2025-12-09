@@ -19,9 +19,6 @@ package com.geeksville.mesh.model
 
 import android.app.Application
 import android.net.Uri
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
@@ -31,6 +28,8 @@ import androidx.navigation.NavHostController
 import com.geeksville.mesh.repository.radio.MeshActivity
 import com.geeksville.mesh.repository.radio.RadioInterfaceService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -41,9 +40,9 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
 import org.meshtastic.core.analytics.platform.PlatformAnalytics
 import org.meshtastic.core.data.repository.FirmwareReleaseRepository
 import org.meshtastic.core.data.repository.MeshLogRepository
@@ -56,8 +55,11 @@ import org.meshtastic.core.model.util.toChannelSet
 import org.meshtastic.core.service.IMeshService
 import org.meshtastic.core.service.MeshServiceNotifications
 import org.meshtastic.core.service.ServiceRepository
-import org.meshtastic.core.strings.R
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.client_notification
+import org.meshtastic.core.ui.component.ScrollToTopEvent
 import org.meshtastic.core.ui.component.toSharedContact
+import org.meshtastic.core.ui.viewmodel.stateInWhileSubscribed
 import org.meshtastic.proto.AdminProtos
 import org.meshtastic.proto.AppOnlyProtos
 import org.meshtastic.proto.MeshProtos
@@ -129,6 +131,13 @@ constructor(
     val meshActivity: SharedFlow<MeshActivity> =
         radioInterfaceService.meshActivity.shareIn(viewModelScope, SharingStarted.Eagerly, 0)
 
+    private val scrollToTopEventChannel = Channel<ScrollToTopEvent>(capacity = Channel.CONFLATED)
+    val scrollToTopEventFlow: Flow<ScrollToTopEvent> = scrollToTopEventChannel.receiveAsFlow()
+
+    fun emitScrollToTopEvent(event: ScrollToTopEvent) {
+        scrollToTopEventChannel.trySend(event)
+    }
+
     data class AlertData(
         val title: String,
         val message: String? = null,
@@ -171,41 +180,18 @@ constructor(
         get() = serviceRepository.meshService
 
     val unreadMessageCount =
-        packetRepository
-            .getUnreadCountTotal()
-            .map { it.coerceAtLeast(0) }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), 0)
+        packetRepository.getUnreadCountTotal().map { it.coerceAtLeast(0) }.stateInWhileSubscribed(initialValue = 0)
 
     // hardware info about our local device (can be null)
     val myNodeInfo: StateFlow<MyNodeEntity?>
         get() = nodeDB.myNodeInfo
-
-    val snackBarHostState = SnackbarHostState()
-
-    fun showSnackBar(text: Int) = showSnackBar(app.getString(text))
-
-    fun showSnackBar(
-        text: String,
-        actionLabel: String? = null,
-        withDismissAction: Boolean = false,
-        duration: SnackbarDuration = if (actionLabel == null) SnackbarDuration.Short else SnackbarDuration.Indefinite,
-        onActionPerformed: (() -> Unit) = {},
-        onDismissed: (() -> Unit) = {},
-    ) = viewModelScope.launch {
-        snackBarHostState.showSnackbar(text, actionLabel, withDismissAction, duration).run {
-            when (this) {
-                SnackbarResult.ActionPerformed -> onActionPerformed()
-                SnackbarResult.Dismissed -> onDismissed()
-            }
-        }
-    }
 
     init {
         serviceRepository.errorMessage
             .filterNotNull()
             .onEach {
                 showAlert(
-                    title = app.getString(R.string.client_notification),
+                    title = getString(Res.string.client_notification),
                     message = it,
                     onConfirm = { serviceRepository.clearErrorMessage() },
                     dismissable = false,
@@ -220,11 +206,11 @@ constructor(
     val sharedContactRequested: StateFlow<AdminProtos.SharedContact?>
         get() = _sharedContactRequested.asStateFlow()
 
-    fun setSharedContactRequested(url: Uri) {
+    fun setSharedContactRequested(url: Uri, onFailure: () -> Unit) {
         runCatching { _sharedContactRequested.value = url.toSharedContact() }
             .onFailure { ex ->
                 Timber.e(ex, "Shared contact error")
-                showSnackBar(R.string.contact_invalid)
+                onFailure()
             }
     }
 
@@ -241,11 +227,12 @@ constructor(
     val requestChannelSet: StateFlow<AppOnlyProtos.ChannelSet?>
         get() = _requestChannelSet
 
-    fun requestChannelUrl(url: Uri) = runCatching { _requestChannelSet.value = url.toChannelSet() }
-        .onFailure { ex ->
-            Timber.e(ex, "Channel url error")
-            showSnackBar(R.string.channel_invalid)
-        }
+    fun requestChannelUrl(url: Uri, onFailure: () -> Unit) =
+        runCatching { _requestChannelSet.value = url.toChannelSet() }
+            .onFailure { ex ->
+                Timber.e(ex, "Channel url error")
+                onFailure()
+            }
 
     val latestStableFirmwareRelease = firmwareReleaseRepository.stableRelease.mapNotNull { it?.asDeviceVersion() }
 

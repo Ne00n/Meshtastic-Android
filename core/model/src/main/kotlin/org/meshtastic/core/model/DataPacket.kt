@@ -61,6 +61,9 @@ data class DataPacket(
     var snr: Float = 0f,
     var rssi: Int = 0,
     var replyId: Int? = null, // If this is a reply to a previous message, this is the ID of that message
+    var relayNode: Int? = null,
+    var relays: Int = 0,
+    var viaMqtt: Boolean = false, // True if this packet passed via MQTT somewhere along its path
 ) : Parcelable {
 
     /** If there was an error with this message, this string describes what was wrong. */
@@ -133,6 +136,7 @@ data class DataPacket(
         parcel.readFloat(),
         parcel.readInt(),
         parcel.readInt().let { if (it == 0) null else it },
+        parcel.readInt().let { if (it == -1) null else it },
     )
 
     @Suppress("CyclomaticComplexMethod")
@@ -156,6 +160,7 @@ data class DataPacket(
         if (snr != other.snr) return false
         if (rssi != other.rssi) return false
         if (replyId != other.replyId) return false
+        if (relayNode != other.relayNode) return false
 
         return true
     }
@@ -175,6 +180,7 @@ data class DataPacket(
         result = 31 * result + snr.hashCode()
         result = 31 * result + rssi
         result = 31 * result + replyId.hashCode()
+        result = 31 * result + relayNode.hashCode()
         return result
     }
 
@@ -193,6 +199,7 @@ data class DataPacket(
         parcel.writeFloat(snr)
         parcel.writeInt(rssi)
         parcel.writeInt(replyId ?: 0)
+        parcel.writeInt(relayNode ?: -1)
     }
 
     override fun describeContents(): Int = 0
@@ -213,6 +220,7 @@ data class DataPacket(
         snr = parcel.readFloat()
         rssi = parcel.readInt()
         replyId = parcel.readInt().let { if (it == 0) null else it }
+        relayNode = parcel.readInt().let { if (it == -1) null else it }
     }
 
     companion object CREATOR : Parcelable.Creator<DataPacket> {

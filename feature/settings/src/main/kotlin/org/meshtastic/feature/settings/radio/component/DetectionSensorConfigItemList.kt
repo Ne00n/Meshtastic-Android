@@ -25,13 +25,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import org.meshtastic.core.strings.R
+import org.jetbrains.compose.resources.stringResource
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.detection_sensor
+import org.meshtastic.core.strings.detection_sensor_config
+import org.meshtastic.core.strings.detection_sensor_enabled
+import org.meshtastic.core.strings.detection_trigger_type
+import org.meshtastic.core.strings.friendly_name
+import org.meshtastic.core.strings.gpio_pin_to_monitor
+import org.meshtastic.core.strings.minimum_broadcast_seconds
+import org.meshtastic.core.strings.send_bell_with_alert_message
+import org.meshtastic.core.strings.state_broadcast_seconds
+import org.meshtastic.core.strings.use_input_pullup_mode
 import org.meshtastic.core.ui.component.DropDownPreference
 import org.meshtastic.core.ui.component.EditTextPreference
 import org.meshtastic.core.ui.component.SwitchPreference
@@ -45,15 +54,15 @@ import org.meshtastic.proto.copy
 import org.meshtastic.proto.moduleConfig
 
 @Composable
-fun DetectionSensorConfigScreen(navController: NavController, viewModel: RadioConfigViewModel = hiltViewModel()) {
+fun DetectionSensorConfigScreen(viewModel: RadioConfigViewModel = hiltViewModel(), onBack: () -> Unit) {
     val state by viewModel.radioConfigState.collectAsStateWithLifecycle()
     val detectionSensorConfig = state.moduleConfig.detectionSensor
     val formState = rememberConfigState(initialValue = detectionSensorConfig)
     val focusManager = LocalFocusManager.current
 
     RadioConfigScreenList(
-        title = stringResource(id = R.string.detection_sensor),
-        onBack = { navController.popBackStack() },
+        title = stringResource(Res.string.detection_sensor),
+        onBack = onBack,
         configState = formState,
         enabled = state.connected,
         responseState = state.responseState,
@@ -64,9 +73,9 @@ fun DetectionSensorConfigScreen(navController: NavController, viewModel: RadioCo
         },
     ) {
         item {
-            TitledCard(title = stringResource(R.string.detection_sensor_config)) {
+            TitledCard(title = stringResource(Res.string.detection_sensor_config)) {
                 SwitchPreference(
-                    title = stringResource(R.string.detection_sensor_enabled),
+                    title = stringResource(Res.string.detection_sensor_enabled),
                     checked = formState.value.enabled,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { this.enabled = it } },
@@ -77,7 +86,7 @@ fun DetectionSensorConfigScreen(navController: NavController, viewModel: RadioCo
                     IntervalConfiguration.DETECTION_SENSOR_MINIMUM.allowedIntervals
                 }
                 DropDownPreference(
-                    title = stringResource(R.string.minimum_broadcast_seconds),
+                    title = stringResource(Res.string.minimum_broadcast_seconds),
                     selectedItem = formState.value.minimumBroadcastSecs.toLong(),
                     enabled = state.connected,
                     items = minimumBroadcastIntervals.map { it.value to it.toDisplayString() },
@@ -86,7 +95,7 @@ fun DetectionSensorConfigScreen(navController: NavController, viewModel: RadioCo
 
                 val stateBroadcastIntervals = remember { IntervalConfiguration.DETECTION_SENSOR_STATE.allowedIntervals }
                 DropDownPreference(
-                    title = stringResource(R.string.state_broadcast_seconds),
+                    title = stringResource(Res.string.state_broadcast_seconds),
                     selectedItem = formState.value.stateBroadcastSecs.toLong(),
                     enabled = state.connected,
                     items = stateBroadcastIntervals.map { it.value to it.toDisplayString() },
@@ -94,7 +103,7 @@ fun DetectionSensorConfigScreen(navController: NavController, viewModel: RadioCo
                 )
                 HorizontalDivider()
                 SwitchPreference(
-                    title = stringResource(R.string.send_bell_with_alert_message),
+                    title = stringResource(Res.string.send_bell_with_alert_message),
                     checked = formState.value.sendBell,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { sendBell = it } },
@@ -102,7 +111,7 @@ fun DetectionSensorConfigScreen(navController: NavController, viewModel: RadioCo
                 )
                 HorizontalDivider()
                 EditTextPreference(
-                    title = stringResource(R.string.friendly_name),
+                    title = stringResource(Res.string.friendly_name),
                     value = formState.value.name,
                     maxSize = 19, // name max_size:20
                     enabled = state.connected,
@@ -115,7 +124,7 @@ fun DetectionSensorConfigScreen(navController: NavController, viewModel: RadioCo
                 HorizontalDivider()
                 val pins = remember { gpioPins }
                 DropDownPreference(
-                    title = stringResource(R.string.gpio_pin_to_monitor),
+                    title = stringResource(Res.string.gpio_pin_to_monitor),
                     items = pins,
                     selectedItem = formState.value.monitorPin,
                     enabled = state.connected,
@@ -123,7 +132,7 @@ fun DetectionSensorConfigScreen(navController: NavController, viewModel: RadioCo
                 )
                 HorizontalDivider()
                 DropDownPreference(
-                    title = stringResource(R.string.detection_trigger_type),
+                    title = stringResource(Res.string.detection_trigger_type),
                     enabled = state.connected,
                     items =
                     ModuleConfig.DetectionSensorConfig.TriggerType.entries
@@ -134,7 +143,7 @@ fun DetectionSensorConfigScreen(navController: NavController, viewModel: RadioCo
                 )
                 HorizontalDivider()
                 SwitchPreference(
-                    title = stringResource(R.string.use_input_pullup_mode),
+                    title = stringResource(Res.string.use_input_pullup_mode),
                     checked = formState.value.usePullup,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { usePullup = it } },

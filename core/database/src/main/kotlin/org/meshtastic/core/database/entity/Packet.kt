@@ -52,7 +52,9 @@ data class PacketEntity(
             packetId = packetId,
             emojis = reactions.toReaction(getNode),
             replyId = data.replyId,
-            viaMqtt = node.viaMqtt,
+            viaMqtt = data.viaMqtt,
+            relayNode = data.relayNode,
+            relays = data.relays,
         )
     }
 }
@@ -76,11 +78,32 @@ data class Packet(
     @ColumnInfo(name = "snr", defaultValue = "0") val snr: Float = 0f,
     @ColumnInfo(name = "rssi", defaultValue = "0") val rssi: Int = 0,
     @ColumnInfo(name = "hopsAway", defaultValue = "-1") val hopsAway: Int = -1,
-)
+) {
+    companion object {
+        const val RELAY_NODE_SUFFIX_MASK = 0xFF
+
+        fun getRelayNode(relayNodeId: Int, nodes: List<Node>): Node? {
+            val relayNodeIdSuffix = relayNodeId and RELAY_NODE_SUFFIX_MASK
+            val candidateRelayNodes = nodes.filter { (it.num and RELAY_NODE_SUFFIX_MASK) == relayNodeIdSuffix }
+            val closestRelayNode =
+                if (candidateRelayNodes.size == 1) {
+                    candidateRelayNodes.first()
+                } else {
+                    candidateRelayNodes.minByOrNull { it.hopsAway }
+                }
+            return closestRelayNode
+        }
+    }
+}
 
 @Suppress("ConstructorParameterNaming")
 @Entity(tableName = "contact_settings")
-data class ContactSettings(@PrimaryKey val contact_key: String, val muteUntil: Long = 0L) {
+data class ContactSettings(
+    @PrimaryKey val contact_key: String,
+    val muteUntil: Long = 0L,
+    @ColumnInfo(name = "last_read_message_uuid") val lastReadMessageUuid: Long? = null,
+    @ColumnInfo(name = "last_read_message_timestamp") val lastReadMessageTimestamp: Long? = null,
+) {
     val isMuted
         get() = System.currentTimeMillis() <= muteUntil
 }

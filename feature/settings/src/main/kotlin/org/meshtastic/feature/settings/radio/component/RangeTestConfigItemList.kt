@@ -22,11 +22,15 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import org.meshtastic.core.strings.R
+import org.jetbrains.compose.resources.stringResource
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.range_test
+import org.meshtastic.core.strings.range_test_config
+import org.meshtastic.core.strings.range_test_enabled
+import org.meshtastic.core.strings.save_csv_in_storage_esp32_only
+import org.meshtastic.core.strings.sender_message_interval_seconds
 import org.meshtastic.core.ui.component.DropDownPreference
 import org.meshtastic.core.ui.component.SwitchPreference
 import org.meshtastic.core.ui.component.TitledCard
@@ -37,14 +41,14 @@ import org.meshtastic.proto.copy
 import org.meshtastic.proto.moduleConfig
 
 @Composable
-fun RangeTestConfigScreen(navController: NavController, viewModel: RadioConfigViewModel = hiltViewModel()) {
+fun RangeTestConfigScreen(viewModel: RadioConfigViewModel = hiltViewModel(), onBack: () -> Unit) {
     val state by viewModel.radioConfigState.collectAsStateWithLifecycle()
     val rangeTestConfig = state.moduleConfig.rangeTest
     val formState = rememberConfigState(initialValue = rangeTestConfig)
 
     RadioConfigScreenList(
-        title = stringResource(id = R.string.range_test),
-        onBack = { navController.popBackStack() },
+        title = stringResource(Res.string.range_test),
+        onBack = onBack,
         configState = formState,
         enabled = state.connected,
         responseState = state.responseState,
@@ -55,9 +59,9 @@ fun RangeTestConfigScreen(navController: NavController, viewModel: RadioConfigVi
         },
     ) {
         item {
-            TitledCard(title = stringResource(R.string.range_test_config)) {
+            TitledCard(title = stringResource(Res.string.range_test_config)) {
                 SwitchPreference(
-                    title = stringResource(R.string.range_test_enabled),
+                    title = stringResource(Res.string.range_test_enabled),
                     checked = formState.value.enabled,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { this.enabled = it } },
@@ -66,7 +70,7 @@ fun RangeTestConfigScreen(navController: NavController, viewModel: RadioConfigVi
                 HorizontalDivider()
                 val rangeItems = remember { IntervalConfiguration.RANGE_TEST_SENDER.allowedIntervals }
                 DropDownPreference(
-                    title = stringResource(R.string.sender_message_interval_seconds),
+                    title = stringResource(Res.string.sender_message_interval_seconds),
                     selectedItem = formState.value.sender.toLong(),
                     enabled = state.connected,
                     items = rangeItems.map { it.value to it.toDisplayString() },
@@ -74,7 +78,7 @@ fun RangeTestConfigScreen(navController: NavController, viewModel: RadioConfigVi
                 )
                 HorizontalDivider()
                 SwitchPreference(
-                    title = stringResource(R.string.save_csv_in_storage_esp32_only),
+                    title = stringResource(Res.string.save_csv_in_storage_esp32_only),
                     checked = formState.value.save,
                     enabled = state.connected,
                     onCheckedChange = { formState.value = formState.value.copy { save = it } },

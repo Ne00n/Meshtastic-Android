@@ -17,6 +17,7 @@
 
 package org.meshtastic.core.database.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.MapColumn
 import androidx.room.Query
@@ -30,6 +31,7 @@ import org.meshtastic.core.database.entity.PacketEntity
 import org.meshtastic.core.database.entity.ReactionEntity
 import org.meshtastic.core.model.DataPacket
 import org.meshtastic.core.model.MessageStatus
+import org.meshtastic.proto.ChannelProtos.ChannelSettings
 
 @Suppress("TooManyFunctions")
 @Dao
@@ -63,6 +65,23 @@ interface PacketDao {
 
     @Query(
         """
+    SELECT p.* FROM packet p
+    INNER JOIN (
+        SELECT contact_key, MAX(received_time) as max_time
+        FROM packet
+        WHERE (myNodeNum = 0 OR myNodeNum = (SELECT myNodeNum FROM my_node))
+            AND port_num = 1
+        GROUP BY contact_key
+    ) latest ON p.contact_key = latest.contact_key AND p.received_time = latest.max_time
+    WHERE (p.myNodeNum = 0 OR p.myNodeNum = (SELECT myNodeNum FROM my_node))
+        AND p.port_num = 1
+    ORDER BY p.received_time DESC
+    """,
+    )
+    fun getContactKeysPaged(): PagingSource<Int, Packet>
+
+    @Query(
+        """
     SELECT COUNT(*) FROM packet
     WHERE (myNodeNum = 0 OR myNodeNum = (SELECT myNodeNum FROM my_node))
         AND port_num = 1 AND contact_key = :contact
@@ -78,6 +97,26 @@ interface PacketDao {
     """,
     )
     suspend fun getUnreadCount(contact: String): Int
+
+    @Query(
+        """
+    SELECT uuid FROM packet
+    WHERE (myNodeNum = 0 OR myNodeNum = (SELECT myNodeNum FROM my_node))
+        AND port_num = 1 AND contact_key = :contact AND read = 0
+    ORDER BY received_time ASC
+    LIMIT 1
+    """,
+    )
+    fun getFirstUnreadMessageUuid(contact: String): Flow<Long?>
+
+    @Query(
+        """
+    SELECT COUNT(*) > 0 FROM packet
+    WHERE (myNodeNum = 0 OR myNodeNum = (SELECT myNodeNum FROM my_node))
+        AND port_num = 1 AND contact_key = :contact AND read = 0
+    """,
+    )
+    fun hasUnreadMessages(contact: String): Flow<Boolean>
 
     @Query(
         """
@@ -110,6 +149,17 @@ interface PacketDao {
     """,
     )
     fun getMessagesFrom(contact: String): Flow<List<PacketEntity>>
+
+    @Transaction
+    @Query(
+        """
+    SELECT * FROM packet
+    WHERE (myNodeNum = 0 OR myNodeNum = (SELECT myNodeNum FROM my_node))
+        AND port_num = 1 AND contact_key = :contact
+    ORDER BY received_time DESC
+    """,
+    )
+    fun getMessagesFromPaged(contact: String): PagingSource<Int, PacketEntity>
 
     @Query(
         """
@@ -230,14 +280,62 @@ interface PacketDao {
     suspend fun setMuteUntil(contacts: List<String>, until: Long) {
         val contactList =
             contacts.map { contact ->
-                getContactSettings(contact)?.copy(muteUntil = until)
-                    ?: ContactSettings(contact_key = contact, muteUntil = until)
+                // Always mute
+                val absoluteMuteUntil =
+                    if (until == Long.MAX_VALUE) {
+                        Long.MAX_VALUE
+                    } else if (until == 0L) { // unmute
+                        0L
+                    } else {
+                        System.currentTimeMillis() + until
+                    }
+
+                getContactSettings(contact)?.copy(muteUntil = absoluteMuteUntil)
+                    ?: ContactSettings(contact_key = contact, muteUntil = absoluteMuteUntil)
             }
         upsertContactSettings(contactList)
     }
 
     @Upsert suspend fun insert(reaction: ReactionEntity)
 
+    @Transaction
+    suspend fun deleteAll() {
+        deleteAllPackets()
+        deleteAllReactions()
+        deleteAllContactSettings()
+    }
+
     @Query("DELETE FROM packet")
-    suspend fun deleteAll()
+    suspend fun deleteAllPackets()
+
+    @Query("DELETE FROM reactions")
+    suspend fun deleteAllReactions()
+
+    @Query("DELETE FROM contact_settings")
+    suspend fun deleteAllContactSettings()
+
+    /**
+     * One-time migration: Remap all message DataPacket.channel indices to new mapping using PSK after a channel
+     * reorder. For each Packet (with port_num = 1), finds the old PSK then sets the channel index to the matching
+     * newSettings index. Skips if PSKs do not match or are missing.
+     */
+    @Transaction
+    suspend fun migrateChannelsByPSK(oldSettings: List<ChannelSettings>, newSettings: List<ChannelSettings>) {
+        val pskToNewIndex = newSettings.mapIndexed { idx, ch -> ch.psk to idx }.toMap()
+        val allPackets = getAllUserPacketsForMigration()
+        for (packet in allPackets) {
+            val oldIndex = packet.data.channel
+            val oldPSK = oldSettings.getOrNull(oldIndex)?.psk
+            val newIndex = if (oldPSK != null) pskToNewIndex[oldPSK] else null
+            if (oldPSK != null && newIndex != null && oldIndex != newIndex) {
+                // Rebuild contact_key with the new index, keeping the rest unchanged
+                val oldKeySuffix = packet.contact_key.drop(1) // removes only the channelIndex prefix
+                val newContactKey = "$newIndex$oldKeySuffix"
+                update(packet.copy(contact_key = newContactKey, data = packet.data.copy(channel = newIndex)))
+            }
+        }
+    }
+
+    @Query("SELECT * FROM packet WHERE port_num = 1")
+    suspend fun getAllUserPacketsForMigration(): List<Packet>
 }

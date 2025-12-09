@@ -22,7 +22,6 @@ import android.provider.Settings
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.coroutineScope
 import com.geeksville.mesh.BuildConfig
-import com.geeksville.mesh.CoroutineDispatchers
 import com.geeksville.mesh.android.BinaryLogFile
 import com.geeksville.mesh.android.BuildUtils
 import com.geeksville.mesh.concurrent.handledLaunch
@@ -32,7 +31,7 @@ import com.geeksville.mesh.util.ignoreException
 import com.geeksville.mesh.util.toRemoteExceptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -45,6 +44,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.meshtastic.core.analytics.platform.PlatformAnalytics
+import org.meshtastic.core.di.CoroutineDispatchers
 import org.meshtastic.core.model.util.anonymize
 import org.meshtastic.core.prefs.radio.RadioPrefs
 import org.meshtastic.core.service.ConnectionState
@@ -77,11 +77,14 @@ constructor(
     private val analytics: PlatformAnalytics,
 ) {
 
-    private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
+    private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Disconnected)
     val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
 
     private val _receivedData = MutableSharedFlow<ByteArray>()
     val receivedData: SharedFlow<ByteArray> = _receivedData
+
+    private val _connectionError = MutableSharedFlow<BleError>()
+    val connectionError: SharedFlow<BleError> = _connectionError.asSharedFlow()
 
     // Thread-safe StateFlow for tracking device address changes
     private val _currentDeviceAddressFlow = MutableStateFlow(radioPrefs.devAddr)
@@ -95,13 +98,9 @@ constructor(
     val mockInterfaceAddress: String by lazy { toInterfaceAddress(InterfaceId.MOCK, "") }
 
     /** We recreate this scope each time we stop an interface */
-    var serviceScope = CoroutineScope(Dispatchers.IO + Job())
+    var serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private var radioIf: IRadioInterface = NopInterface("")
-
-    // Expose current bluetooth RSSI (null if not connected or not BLE)
-    private val _bluetoothRssi = MutableStateFlow<Int?>(null)
-    val bluetoothRssi: StateFlow<Int?> = _bluetoothRssi.asStateFlow()
 
     /**
      * true if we have started our interface
@@ -115,7 +114,7 @@ constructor(
             .onEach { state ->
                 if (state.enabled) {
                     startInterface()
-                } else if (radioIf is BluetoothInterface) {
+                } else if (radioIf is NordicBleInterface) {
                     stopInterface()
                 }
             }
@@ -219,8 +218,12 @@ constructor(
     // Handle an incoming packet from the radio, broadcasts it as an android intent
     fun handleFromRadio(p: ByteArray) {
         if (logReceives) {
-            receivedPacketsLog.write(p)
-            receivedPacketsLog.flush()
+            try {
+                receivedPacketsLog.write(p)
+                receivedPacketsLog.flush()
+            } catch (t: Throwable) {
+                Timber.w(t, "Failed to write receive log in handleFromRadio")
+            }
         }
 
         if (radioIf is SerialInterface) {
@@ -229,21 +232,30 @@ constructor(
 
         // ignoreException { Timber.d("FromRadio: ${MeshProtos.FromRadio.parseFrom(p)}") }
 
-        processLifecycle.coroutineScope.launch(dispatchers.io) { _receivedData.emit(p) }
-        emitReceiveActivity()
+        try {
+            processLifecycle.coroutineScope.launch(dispatchers.io) { _receivedData.emit(p) }
+            emitReceiveActivity()
+        } catch (t: Throwable) {
+            Timber.e(t, "RadioInterfaceService.handleFromRadio failed while emitting data")
+        }
     }
 
     fun onConnect() {
-        if (_connectionState.value != ConnectionState.CONNECTED) {
-            broadcastConnectionChanged(ConnectionState.CONNECTED)
+        if (_connectionState.value != ConnectionState.Connected) {
+            broadcastConnectionChanged(ConnectionState.Connected)
         }
     }
 
     fun onDisconnect(isPermanent: Boolean) {
-        val newTargetState = if (isPermanent) ConnectionState.DISCONNECTED else ConnectionState.DEVICE_SLEEP
+        val newTargetState = if (isPermanent) ConnectionState.Disconnected else ConnectionState.DeviceSleep
         if (_connectionState.value != newTargetState) {
             broadcastConnectionChanged(newTargetState)
         }
+    }
+
+    fun onDisconnect(error: BleError) {
+        processLifecycle.coroutineScope.launch(dispatchers.default) { _connectionError.emit(error) }
+        onDisconnect(!error.shouldReconnect)
     }
 
     /** Start our configured interface (if it isn't already running) */
@@ -266,13 +278,6 @@ constructor(
                 }
 
                 radioIf = interfaceFactory.createInterface(address)
-
-                // If the new interface is bluetooth, collect its RSSI flow
-                if (radioIf is BluetoothInterface) {
-                    (radioIf as BluetoothInterface).rssiFlow.onEach { _bluetoothRssi.emit(it) }.launchIn(serviceScope)
-                } else {
-                    _bluetoothRssi.value = null
-                }
             }
         }
     }
@@ -286,7 +291,7 @@ constructor(
 
         // cancel any old jobs and get ready for the new ones
         serviceScope.cancel("stopping interface")
-        serviceScope = CoroutineScope(Dispatchers.IO + Job())
+        serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
         if (logSends) {
             sentPacketsLog.close()
@@ -299,7 +304,6 @@ constructor(
         if (r !is NopInterface) {
             onDisconnect(isPermanent = true) // Tell any clients we are now offline
         }
-        _bluetoothRssi.value = null
     }
 
     /**
@@ -308,7 +312,7 @@ constructor(
      * @return true if the device changed, false if no change
      */
     private fun setBondedDeviceAddress(address: String?): Boolean =
-        if (getBondedDeviceAddress() == address && isStarted) {
+        if (getBondedDeviceAddress() == address && isStarted && _connectionState.value == ConnectionState.Connected) {
             Timber.w("Ignoring setBondedDevice ${address.anonymize}, because we are already using that device")
             false
         } else {

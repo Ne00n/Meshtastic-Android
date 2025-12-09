@@ -21,27 +21,38 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.twotone.Message
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import org.meshtastic.core.database.model.Node
-import org.meshtastic.core.strings.R
-import org.meshtastic.core.ui.component.SettingsItem
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.direct_message
+import org.meshtastic.core.strings.exchange_userinfo
+import org.meshtastic.core.ui.component.InsetDivider
+import org.meshtastic.core.ui.component.ListItem
 import org.meshtastic.feature.node.model.NodeDetailAction
 import org.meshtastic.feature.node.model.isEffectivelyUnmessageable
 
 @Composable
 internal fun RemoteDeviceActions(node: Node, lastTracerouteTime: Long?, onAction: (NodeDetailAction) -> Unit) {
-    SettingsItem(
-        text = stringResource(id = R.string.direct_message),
-        leadingIcon = Icons.AutoMirrored.TwoTone.Message,
-        trailingContent = {},
-        onClick = { onAction(NodeDetailAction.HandleNodeMenuAction(NodeMenuAction.DirectMessage(node))) },
-    )
-    SettingsItem(
-        text = stringResource(id = R.string.exchange_userinfo),
+    if (!node.isEffectivelyUnmessageable) {
+        ListItem(
+            text = stringResource(Res.string.direct_message),
+            leadingIcon = Icons.AutoMirrored.TwoTone.Message,
+            trailingIcon = null,
+            onClick = { onAction(NodeDetailAction.HandleNodeMenuAction(NodeMenuAction.DirectMessage(node))) },
+        )
+
+        InsetDivider()
+    }
+
+    ListItem(
+        text = stringResource(Res.string.exchange_userinfo),
         leadingIcon = Icons.Default.Person,
-        trailingContent = {},
+        trailingIcon = null,
         onClick = { onAction(NodeDetailAction.HandleNodeMenuAction(NodeMenuAction.RequestUserInfo(node))) },
     )
+
+    InsetDivider()
+
     TracerouteButton(
         lastTracerouteTime = lastTracerouteTime,
         onClick = { onAction(NodeDetailAction.HandleNodeMenuAction(NodeMenuAction.TraceRoute(node))) },

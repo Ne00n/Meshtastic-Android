@@ -53,7 +53,7 @@ jobs:
       APP_VERSION_CODE: ${{ steps.calculate_version_code.outputs.versionCode }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.tag_name }}
           fetch-depth: 0
@@ -96,7 +96,7 @@ jobs:
     environment: Release
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.tag_name }}
           fetch-depth: 0
@@ -126,7 +126,7 @@ jobs:
       - name: Setup Fastlane
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2'
+          ruby-version: '3.4.7'
           bundler-cache: true
 
       - name: Build F-Droid with Fastlane
@@ -136,7 +136,7 @@ jobs:
         run: bundle exec fastlane fdroid_build
 
       - name: Upload F-Droid APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: fdroid-apk
           path: app/build/outputs/apk/fdroid/release/app-fdroid-release.apk
@@ -152,7 +152,7 @@ jobs:
     needs: [prepare-build-info, release-fdroid]
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: ./artifacts
 
@@ -164,4 +164,16 @@ jobs:
           generate_release_notes: true
           files: ./artifacts/*
           draft: true
+          prerelease: true
+
+      - name: Create or Update internal GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: ${{ secrets.INTERNAL_BUILDS_HOST }}
+          token: ${{ secrets.INTERNAL_BUILDS_HOST_PAT }}
+          tag_name: ${{ inputs.tag_name }}
+          name: ${{ inputs.tag_name }} (${{ needs.prepare-build-info.outputs.APP_VERSION_CODE }})
+          generate_release_notes: true
+          files: ./artifacts/*/*
+          draft: false
           prerelease: true
