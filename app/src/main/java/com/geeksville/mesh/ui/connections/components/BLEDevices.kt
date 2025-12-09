@@ -87,13 +87,13 @@ import org.meshtastic.core.ui.util.showToast
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 fun BLEDevices(
-    connectionState: ConnectionState,
-    bondedDevices: List<DeviceListEntry>,
-    availableDevices: List<DeviceListEntry>,
-    selectedDevice: String,
-    scanModel: BTScanModel,
-    bluetoothEnabled: Boolean,
-    connectionsViewModel: ConnectionsViewModel,
+    connectionState = connectionState,
+    bondedDevices = bonded,
+    availableDevices = available,
+    selectedDevice = selectedDevice,
+    scanModel = scanModel,
+    bluetoothEnabled = bluetoothState.enabled,
+    connectionsViewModel = connectionsViewModel,
 ) {
     LocalContext.current // Used implicitly by stringResource
     val isScanning by scanModel.spinner.collectAsStateWithLifecycle(false)
