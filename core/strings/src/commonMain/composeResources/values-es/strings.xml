@@ -250,18 +250,10 @@
     <string name="quick_chat_show">Mostrar menú rápido de chat</string>
     <string name="quick_chat_hide">Ocultar menú rápido de chat</string>
     <string name="factory_reset">Restablecer los valores de fábrica</string>
-<<<<<<< HEAD:core/strings/src/main/res/values-es-rES/strings.xml
-    <string name="bluetooth_disabled">Bluetooth is disabled. Please enable it in your device settings.</string>
-    <string name="disable_bluetooth">Disable Bluetooth</string>
-    <string name="open_settings">Open settings</string>
-    <string name="firmware_version">Firmware version: %1$s</string>
-    <string name="permission_missing_31">Meshtastic needs \"Nearby devices\" permissions enabled to find and connect to devices via Bluetooth. You can disable when not in use.</string>
-=======
     <string name="bluetooth_disabled">Bluetooth está deshabilitado. Por favor, actívalo en la configuración de tu dispositivo.</string>
     <string name="open_settings">Abrir ajustes</string>
     <string name="firmware_version">Versión del firmware: %1$s</string>
     <string name="permission_missing_31">Meshtastic necesita activar los permisos \"Dispositivos cercanos\" para encontrar y conectarse a dispositivos mediante Bluetooth. Puede desactivar cuando no esté en uso.</string>
->>>>>>> upstream/main:core/strings/src/commonMain/composeResources/values-es/strings.xml
     <string name="direct_message">Mensaje Directo</string>
     <string name="nodedb_reset">Reinicio de NodeDB</string>
     <string name="delivery_confirmed">Envío confirmado</string>
