@@ -54,16 +54,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
 import org.meshtastic.core.database.model.NodeSortOption
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.desc_node_filter_clear
+import org.meshtastic.core.strings.node_filter_exclude_infrastructure
+import org.meshtastic.core.strings.node_filter_ignored
+import org.meshtastic.core.strings.node_filter_include_unknown
+import org.meshtastic.core.strings.node_filter_only_direct
+import org.meshtastic.core.strings.node_filter_only_online
+import org.meshtastic.core.strings.node_filter_placeholder
+import org.meshtastic.core.strings.node_filter_show_ignored
+import org.meshtastic.core.strings.node_filter_title
+import org.meshtastic.core.strings.node_sort_button
+import org.meshtastic.core.strings.node_sort_title
 import org.meshtastic.core.ui.theme.AppTheme
-import org.meshtastic.core.strings.R as Res
 
 @Suppress("LongParameterList")
 @Composable
@@ -75,6 +86,8 @@ fun NodeFilterTextField(
     onSortSelect: (NodeSortOption) -> Unit,
     includeUnknown: Boolean,
     onToggleIncludeUnknown: () -> Unit,
+    excludeInfrastructure: Boolean,
+    onToggleExcludeInfrastructure: () -> Unit,
     onlyOnline: Boolean,
     onToggleOnlyOnline: () -> Unit,
     onlyDirect: Boolean,
@@ -95,6 +108,8 @@ fun NodeFilterTextField(
                 NodeFilterToggles(
                     includeUnknown = includeUnknown,
                     onToggleIncludeUnknown = onToggleIncludeUnknown,
+                    excludeInfrastructure = excludeInfrastructure,
+                    onToggleExcludeInfrastructure = onToggleExcludeInfrastructure,
                     onlyOnline = onlyOnline,
                     onToggleOnlyOnline = onToggleOnlyOnline,
                     onlyDirect = onlyDirect,
@@ -203,6 +218,12 @@ private fun NodeSortButton(
         DropdownMenuTitle(text = stringResource(Res.string.node_filter_title))
 
         DropdownMenuCheck(
+            text = stringResource(Res.string.node_filter_exclude_infrastructure),
+            checked = toggles.excludeInfrastructure,
+            onClick = toggles.onToggleExcludeInfrastructure,
+        )
+
+        DropdownMenuCheck(
             text = stringResource(Res.string.node_filter_include_unknown),
             checked = toggles.includeUnknown,
             onClick = toggles.onToggleIncludeUnknown,
@@ -288,6 +309,8 @@ private fun NodeFilterTextFieldPreview() {
             onSortSelect = {},
             includeUnknown = false,
             onToggleIncludeUnknown = {},
+            excludeInfrastructure = false,
+            onToggleExcludeInfrastructure = {},
             onlyOnline = false,
             onToggleOnlyOnline = {},
             onlyDirect = false,
@@ -302,6 +325,8 @@ private fun NodeFilterTextFieldPreview() {
 data class NodeFilterToggles(
     val includeUnknown: Boolean,
     val onToggleIncludeUnknown: () -> Unit,
+    val excludeInfrastructure: Boolean,
+    val onToggleExcludeInfrastructure: () -> Unit,
     val onlyOnline: Boolean,
     val onToggleOnlyOnline: () -> Unit,
     val onlyDirect: Boolean,

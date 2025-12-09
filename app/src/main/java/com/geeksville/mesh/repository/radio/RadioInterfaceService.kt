@@ -31,7 +31,7 @@ import com.geeksville.mesh.util.ignoreException
 import com.geeksville.mesh.util.toRemoteExceptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -77,22 +77,18 @@ constructor(
     private val analytics: PlatformAnalytics,
 ) {
 
-    private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
+    private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Disconnected)
     val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
 
     private val _receivedData = MutableSharedFlow<ByteArray>()
     val receivedData: SharedFlow<ByteArray> = _receivedData
 
+    private val _connectionError = MutableSharedFlow<BleError>()
+    val connectionError: SharedFlow<BleError> = _connectionError.asSharedFlow()
+
     // Thread-safe StateFlow for tracking device address changes
     private val _currentDeviceAddressFlow = MutableStateFlow(radioPrefs.devAddr)
     val currentDeviceAddressFlow: StateFlow<String?> = _currentDeviceAddressFlow.asStateFlow()
-
-    private val _isRssiPollingEnabled = MutableStateFlow(false)
-    val isRssiPollingEnabled: StateFlow<Boolean> = _isRssiPollingEnabled.asStateFlow()
-
-    fun setRssiPolling(enabled: Boolean) {
-        _isRssiPollingEnabled.value = enabled
-    }
 
     private val logSends = false
     private val logReceives = false
@@ -102,7 +98,7 @@ constructor(
     val mockInterfaceAddress: String by lazy { toInterfaceAddress(InterfaceId.MOCK, "") }
 
     /** We recreate this scope each time we stop an interface */
-    var serviceScope = CoroutineScope(Dispatchers.IO + Job())
+    var serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private var radioIf: IRadioInterface = NopInterface("")
 
@@ -221,15 +217,6 @@ constructor(
 
     // Handle an incoming packet from the radio, broadcasts it as an android intent
     fun handleFromRadio(p: ByteArray) {
-        Timber.d(
-            "RadioInterfaceService.handleFromRadio called with ${p.size} bytes: ${p.joinToString(
-                prefix = "[",
-                postfix = "]",
-            ) { b ->
-                String.format("0x%02x", b)
-            }}",
-        )
-
         if (logReceives) {
             try {
                 receivedPacketsLog.write(p)
@@ -248,23 +235,27 @@ constructor(
         try {
             processLifecycle.coroutineScope.launch(dispatchers.io) { _receivedData.emit(p) }
             emitReceiveActivity()
-            Timber.d("RadioInterfaceService.handleFromRadio dispatched successfully")
         } catch (t: Throwable) {
             Timber.e(t, "RadioInterfaceService.handleFromRadio failed while emitting data")
         }
     }
 
     fun onConnect() {
-        if (_connectionState.value != ConnectionState.CONNECTED) {
-            broadcastConnectionChanged(ConnectionState.CONNECTED)
+        if (_connectionState.value != ConnectionState.Connected) {
+            broadcastConnectionChanged(ConnectionState.Connected)
         }
     }
 
     fun onDisconnect(isPermanent: Boolean) {
-        val newTargetState = if (isPermanent) ConnectionState.DISCONNECTED else ConnectionState.DEVICE_SLEEP
+        val newTargetState = if (isPermanent) ConnectionState.Disconnected else ConnectionState.DeviceSleep
         if (_connectionState.value != newTargetState) {
             broadcastConnectionChanged(newTargetState)
         }
+    }
+
+    fun onDisconnect(error: BleError) {
+        processLifecycle.coroutineScope.launch(dispatchers.default) { _connectionError.emit(error) }
+        onDisconnect(!error.shouldReconnect)
     }
 
     /** Start our configured interface (if it isn't already running) */
@@ -300,7 +291,7 @@ constructor(
 
         // cancel any old jobs and get ready for the new ones
         serviceScope.cancel("stopping interface")
-        serviceScope = CoroutineScope(Dispatchers.IO + Job())
+        serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
         if (logSends) {
             sentPacketsLog.close()
@@ -321,7 +312,7 @@ constructor(
      * @return true if the device changed, false if no change
      */
     private fun setBondedDeviceAddress(address: String?): Boolean =
-        if (getBondedDeviceAddress() == address && isStarted && _connectionState.value == ConnectionState.CONNECTED) {
+        if (getBondedDeviceAddress() == address && isStarted && _connectionState.value == ConnectionState.Connected) {
             Timber.w("Ignoring setBondedDevice ${address.anonymize}, because we are already using that device")
             false
         } else {

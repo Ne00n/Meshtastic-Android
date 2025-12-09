@@ -135,8 +135,11 @@ interface IMeshService {
     /// Send FactoryReset admin packet to nodeNum
     void requestFactoryReset(in int requestId, in int destNum);
 
+    /// Send reboot to DFU admin packet
+    void rebootToDfu();
+
     /// Send NodedbReset admin packet to nodeNum
-    void requestNodedbReset(in int requestId, in int destNum);
+    void requestNodedbReset(in int requestId, in int destNum, in boolean preserveFavorites);
 
     /// Returns a ChannelSet protobuf
     byte []getChannelSet();

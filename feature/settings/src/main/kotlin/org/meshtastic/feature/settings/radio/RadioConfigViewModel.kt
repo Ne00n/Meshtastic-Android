@@ -25,7 +25,6 @@ import android.net.Uri
 import android.os.RemoteException
 import android.util.Base64
 import androidx.annotation.RequiresPermission
-import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
@@ -46,6 +45,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.StringResource
 import org.json.JSONObject
 import org.meshtastic.core.data.repository.LocationRepository
 import org.meshtastic.core.data.repository.NodeRepository
@@ -62,6 +62,8 @@ import org.meshtastic.core.prefs.map.MapConsentPrefs
 import org.meshtastic.core.service.ConnectionState
 import org.meshtastic.core.service.IMeshService
 import org.meshtastic.core.service.ServiceRepository
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.cant_shutdown
 import org.meshtastic.core.ui.util.getChannelList
 import org.meshtastic.feature.settings.navigation.ConfigRoute
 import org.meshtastic.feature.settings.navigation.ModuleRoute
@@ -81,7 +83,6 @@ import org.meshtastic.proto.moduleConfig
 import timber.log.Timber
 import java.io.FileOutputStream
 import javax.inject.Inject
-import org.meshtastic.core.strings.R as Res
 
 /** Data class that represents the current RadioConfig state. */
 data class RadioConfigState(
@@ -99,6 +100,7 @@ data class RadioConfigState(
     val responseState: ResponseState<Boolean> = ResponseState.Empty,
     val analyticsAvailable: Boolean = true,
     val analyticsEnabled: Boolean = false,
+    val nodeDbResetPreserveFavorites: Boolean = false,
 )
 
 @Suppress("LongParameterList")
@@ -134,6 +136,10 @@ constructor(
     private val _radioConfigState = MutableStateFlow(RadioConfigState())
     val radioConfigState: StateFlow<RadioConfigState> = _radioConfigState
 
+    fun setPreserveFavorites(preserveFavorites: Boolean) {
+        viewModelScope.launch { _radioConfigState.update { it.copy(nodeDbResetPreserveFavorites = preserveFavorites) } }
+    }
+
     private val _currentDeviceProfile = MutableStateFlow(deviceProfile {})
     val currentDeviceProfile
         get() = _currentDeviceProfile.value
@@ -163,7 +169,7 @@ constructor(
         serviceRepository.meshPacketFlow.onEach(::processPacketResponse).launchIn(viewModelScope)
 
         combine(serviceRepository.connectionState, radioConfigState) { connState, configState ->
-            _radioConfigState.update { it.copy(connected = connState == ConnectionState.CONNECTED) }
+            _radioConfigState.update { it.copy(connected = connState == ConnectionState.Connected) }
         }
             .launchIn(viewModelScope)
 
@@ -360,24 +366,40 @@ constructor(
             "Request factory reset error",
         )
         if (destNum == myNodeNum) {
-            viewModelScope.launch { nodeRepository.clearNodeDB() }
+            viewModelScope.launch {
+                // Clear the service's in-memory node cache first so screens refresh immediately.
+                val existingNodeNums = nodeRepository.getNodeDBbyNum().firstOrNull()?.keys?.toList().orEmpty()
+                meshService?.let { service ->
+                    existingNodeNums.forEach { service.removeByNodenum(service.packetId, it) }
+                }
+                nodeRepository.clearNodeDB()
+            }
         }
     }
 
-    private fun requestNodedbReset(destNum: Int) {
+    private fun requestNodedbReset(destNum: Int, preserveFavorites: Boolean) {
         request(
             destNum,
-            { service, packetId, dest -> service.requestNodedbReset(packetId, dest) },
+            { service, packetId, dest -> service.requestNodedbReset(packetId, dest, preserveFavorites) },
             "Request NodeDB reset error",
         )
         if (destNum == myNodeNum) {
-            viewModelScope.launch { nodeRepository.clearNodeDB() }
+            viewModelScope.launch {
+                // Clear the service's in-memory node cache as well so UI updates immediately.
+                val existingNodeNums = nodeRepository.getNodeDBbyNum().firstOrNull()?.keys?.toList().orEmpty()
+                meshService?.let { service ->
+                    existingNodeNums.forEach { service.removeByNodenum(service.packetId, it) }
+                }
+                nodeRepository.clearNodeDB(preserveFavorites)
+            }
         }
     }
 
     private fun sendAdminRequest(destNum: Int) {
         val route = radioConfigState.value.route
         _radioConfigState.update { it.copy(route = "") } // setter (response is PortNum.ROUTING_APP)
+
+        val preserveFavorites = radioConfigState.value.nodeDbResetPreserveFavorites
 
         when (route) {
             AdminRoute.REBOOT.name -> requestReboot(destNum)
@@ -391,7 +413,7 @@ constructor(
                 }
 
             AdminRoute.FACTORY_RESET.name -> requestFactoryReset(destNum)
-            AdminRoute.NODEDB_RESET.name -> requestNodedbReset(destNum)
+            AdminRoute.NODEDB_RESET.name -> requestNodedbReset(destNum, preserveFavorites)
         }
     }
 
@@ -534,6 +556,7 @@ constructor(
                 connected = it.connected,
                 route = route.name,
                 metadata = it.metadata,
+                nodeDbResetPreserveFavorites = it.nodeDbResetPreserveFavorites,
                 responseState = ResponseState.Loading(),
             )
         }
@@ -606,7 +629,7 @@ constructor(
 
     private fun sendError(error: String) = setResponseStateError(UiText.DynamicString(error))
 
-    private fun sendError(@StringRes id: Int) = setResponseStateError(UiText.StringResource(id))
+    private fun sendError(id: StringResource) = setResponseStateError(UiText.StringResource(id))
 
     private fun setResponseStateError(error: UiText) {
         _radioConfigState.update { it.copy(responseState = ResponseState.Error(error)) }

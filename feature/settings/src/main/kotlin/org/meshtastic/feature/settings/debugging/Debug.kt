@@ -63,7 +63,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -80,6 +79,16 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.stringResource
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.debug_clear
+import org.meshtastic.core.strings.debug_clear_logs_confirm
+import org.meshtastic.core.strings.debug_decoded_payload
+import org.meshtastic.core.strings.debug_export_failed
+import org.meshtastic.core.strings.debug_export_success
+import org.meshtastic.core.strings.debug_filters
+import org.meshtastic.core.strings.debug_logs_export
+import org.meshtastic.core.strings.debug_panel
 import org.meshtastic.core.ui.component.CopyIconButton
 import org.meshtastic.core.ui.component.MainAppBar
 import org.meshtastic.core.ui.component.SimpleAlertDialog
@@ -94,7 +103,6 @@ import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import org.meshtastic.core.strings.R as Res
 
 private val REGEX_ANNOTATED_NODE_ID = Regex("\\(![0-9a-fA-F]{8}\\)$", RegexOption.MULTILINE)
 
@@ -230,7 +238,6 @@ internal fun DebugItem(
                 val messageAnnotatedString = rememberAnnotatedLogMessage(log, searchText)
                 Text(
                     text = messageAnnotatedString,
-                    softWrap = false,
                     style =
                     TextStyle(
                         fontSize = if (isSelected) 12.sp else 9.sp,
@@ -372,24 +379,26 @@ private suspend fun exportAllLogsToUri(context: Context, targetUri: Uri, logs: L
                     logs.forEach { log ->
                         writer.write("${log.formattedReceivedDate} [${log.messageType}]\n")
                         writer.write(log.logMessage)
-                        if (!log.decodedPayload.isNullOrBlank()) {
-                            writer.write("\n\nDecoded Payload:\n{")
-                            writer.write("\n")
-                            // Redact Decoded keys.
-                            log.decodedPayload.lineSequence().forEach { line ->
-                                var outputLine = line
-                                val redacted = redactedKeys.firstOrNull { line.contains(it) }
-                                if (redacted != null) {
-                                    val idx = line.indexOf(':')
-                                    if (idx != -1) {
-                                        outputLine = line.substring(0, idx + 1)
-                                        outputLine += "<redacted>"
-                                    }
-                                }
-                                writer.write(outputLine)
+                        log.decodedPayload?.let { decodedPayload ->
+                            if (decodedPayload.isNotBlank()) {
+                                writer.write("\n\nDecoded Payload:\n{")
                                 writer.write("\n")
+                                // Redact Decoded keys.
+                                decodedPayload.lineSequence().forEach { line ->
+                                    var outputLine = line
+                                    val redacted = redactedKeys.firstOrNull { line.contains(it) }
+                                    if (redacted != null) {
+                                        val idx = line.indexOf(':')
+                                        if (idx != -1) {
+                                            outputLine = line.take(idx + 1)
+                                            outputLine += "<redacted>"
+                                        }
+                                    }
+                                    writer.write(outputLine)
+                                    writer.write("\n")
+                                }
+                                writer.write("\n}")
                             }
-                            writer.write("\n}")
                         }
                         writer.write("\n\n")
                     }

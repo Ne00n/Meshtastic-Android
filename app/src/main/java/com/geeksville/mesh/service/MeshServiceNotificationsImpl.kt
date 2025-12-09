@@ -28,7 +28,6 @@ import android.content.Intent
 import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.RingtoneManager
-import androidx.annotation.StringRes
 import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
 import androidx.core.app.RemoteInput
@@ -37,17 +36,32 @@ import androidx.core.net.toUri
 import com.geeksville.mesh.MainActivity
 import com.geeksville.mesh.R.raw
 import com.geeksville.mesh.service.ReplyReceiver.Companion.KEY_TEXT_REPLY
+import com.meshtastic.core.strings.getString
 import dagger.hilt.android.qualifiers.ApplicationContext
+import org.jetbrains.compose.resources.StringResource
 import org.meshtastic.core.database.entity.NodeEntity
 import org.meshtastic.core.model.util.formatUptime
 import org.meshtastic.core.navigation.DEEP_LINK_BASE_URI
 import org.meshtastic.core.service.MeshServiceNotifications
 import org.meshtastic.core.service.SERVICE_NOTIFY_ID
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.client_notification
+import org.meshtastic.core.strings.low_battery_message
+import org.meshtastic.core.strings.low_battery_title
+import org.meshtastic.core.strings.meshtastic_alerts_notifications
+import org.meshtastic.core.strings.meshtastic_broadcast_notifications
+import org.meshtastic.core.strings.meshtastic_low_battery_notifications
+import org.meshtastic.core.strings.meshtastic_low_battery_temporary_remote_notifications
+import org.meshtastic.core.strings.meshtastic_messages_notifications
+import org.meshtastic.core.strings.meshtastic_new_nodes_notifications
+import org.meshtastic.core.strings.meshtastic_service_notifications
+import org.meshtastic.core.strings.new_node_seen
+import org.meshtastic.core.strings.no_local_stats
+import org.meshtastic.core.strings.reply
 import org.meshtastic.proto.MeshProtos
 import org.meshtastic.proto.TelemetryProtos
 import org.meshtastic.proto.TelemetryProtos.LocalStats
 import javax.inject.Inject
-import org.meshtastic.core.strings.R as Res
 
 /**
  * Manages the creation and display of all app notifications.
@@ -73,7 +87,7 @@ class MeshServiceNotificationsImpl @Inject constructor(@ApplicationContext priva
      */
     private sealed class NotificationType(
         val channelId: String,
-        @StringRes val channelNameRes: Int,
+        val channelNameRes: StringResource,
         val importance: Int,
     ) {
         object ServiceState :
@@ -162,7 +176,7 @@ class MeshServiceNotificationsImpl @Inject constructor(@ApplicationContext priva
     private fun createNotificationChannel(type: NotificationType) {
         if (notificationManager.getNotificationChannel(type.channelId) != null) return
 
-        val channelName = context.getString(type.channelNameRes)
+        val channelName = getString(type.channelNameRes)
         val channel =
             NotificationChannel(type.channelId, channelName, type.importance).apply {
                 lightColor = NOTIFICATION_LIGHT_COLOR
@@ -245,7 +259,7 @@ class MeshServiceNotificationsImpl @Inject constructor(@ApplicationContext priva
                 null
             }
 
-        cachedMessage = message ?: cachedMessage ?: context.getString(Res.string.no_local_stats)
+        cachedMessage = message ?: cachedMessage ?: getString(Res.string.no_local_stats)
 
         val notification =
             createServiceStateNotification(
@@ -281,7 +295,7 @@ class MeshServiceNotificationsImpl @Inject constructor(@ApplicationContext priva
 
     override fun showClientNotification(clientNotification: MeshProtos.ClientNotification) {
         val notification =
-            createClientNotification(context.getString(Res.string.client_notification), clientNotification.message)
+            createClientNotification(getString(Res.string.client_notification), clientNotification.message)
         notificationManager.notify(clientNotification.toString().hashCode(), notification)
     }
 
@@ -361,7 +375,7 @@ class MeshServiceNotificationsImpl @Inject constructor(@ApplicationContext priva
     }
 
     private fun createNewNodeSeenNotification(name: String, message: String?): Notification {
-        val title = context.getString(Res.string.new_node_seen).format(name)
+        val title = getString(Res.string.new_node_seen).format(name)
         val builder =
             commonBuilder(NotificationType.NewNode)
                 .setCategory(Notification.CATEGORY_STATUS)
@@ -379,9 +393,8 @@ class MeshServiceNotificationsImpl @Inject constructor(@ApplicationContext priva
 
     private fun createLowBatteryNotification(node: NodeEntity, isRemote: Boolean): Notification {
         val type = if (isRemote) NotificationType.LowBatteryRemote else NotificationType.LowBatteryLocal
-        val title = context.getString(Res.string.low_battery_title).format(node.shortName)
-        val message =
-            context.getString(Res.string.low_battery_message).format(node.longName, node.deviceMetrics.batteryLevel)
+        val title = getString(Res.string.low_battery_title).format(node.shortName)
+        val message = getString(Res.string.low_battery_message).format(node.longName, node.deviceMetrics.batteryLevel)
 
         return commonBuilder(type)
             .setCategory(Notification.CATEGORY_STATUS)
@@ -431,7 +444,7 @@ class MeshServiceNotificationsImpl @Inject constructor(@ApplicationContext priva
     }
 
     private fun createReplyAction(contactKey: String): NotificationCompat.Action {
-        val replyLabel = context.getString(Res.string.reply)
+        val replyLabel = getString(Res.string.reply)
         val remoteInput = RemoteInput.Builder(KEY_TEXT_REPLY).setLabel(replyLabel).build()
 
         val replyIntent =

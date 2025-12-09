@@ -29,7 +29,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity.RESULT_OK
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -42,9 +45,16 @@ import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.Memory
 import androidx.compose.material.icons.rounded.Output
 import androidx.compose.material.icons.rounded.WavingHand
+import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,8 +63,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -63,11 +71,39 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 import org.meshtastic.core.common.gpsDisabled
+import org.meshtastic.core.database.DatabaseConstants
 import org.meshtastic.core.navigation.Route
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.analytics_okay
+import org.meshtastic.core.strings.app_settings
+import org.meshtastic.core.strings.app_version
+import org.meshtastic.core.strings.bottom_nav_settings
+import org.meshtastic.core.strings.choose_theme
+import org.meshtastic.core.strings.device_db_cache_limit
+import org.meshtastic.core.strings.device_db_cache_limit_summary
+import org.meshtastic.core.strings.dynamic
+import org.meshtastic.core.strings.export_configuration
+import org.meshtastic.core.strings.export_data_csv
+import org.meshtastic.core.strings.import_configuration
+import org.meshtastic.core.strings.intro_show
+import org.meshtastic.core.strings.location_disabled
+import org.meshtastic.core.strings.modules_already_unlocked
+import org.meshtastic.core.strings.modules_unlocked
+import org.meshtastic.core.strings.preferences_language
+import org.meshtastic.core.strings.provide_location_to_mesh
+import org.meshtastic.core.strings.remotely_administrating
+import org.meshtastic.core.strings.save_rangetest
+import org.meshtastic.core.strings.system_settings
+import org.meshtastic.core.strings.theme
+import org.meshtastic.core.strings.theme_dark
+import org.meshtastic.core.strings.theme_light
+import org.meshtastic.core.strings.theme_system
+import org.meshtastic.core.ui.component.DropDownPreference
 import org.meshtastic.core.ui.component.ListItem
 import org.meshtastic.core.ui.component.MainAppBar
-import org.meshtastic.core.ui.component.MultipleChoiceAlertDialog
 import org.meshtastic.core.ui.component.SwitchListItem
 import org.meshtastic.core.ui.component.TitledCard
 import org.meshtastic.core.ui.theme.MODE_DYNAMIC
@@ -78,13 +114,12 @@ import org.meshtastic.feature.settings.radio.RadioConfigViewModel
 import org.meshtastic.feature.settings.radio.component.EditDeviceProfileDialog
 import org.meshtastic.feature.settings.radio.component.PacketResponseStateDialog
 import org.meshtastic.feature.settings.util.LanguageUtils
-import org.meshtastic.feature.settings.util.LanguageUtils.getLanguageMap
+import org.meshtastic.feature.settings.util.LanguageUtils.languageMap
 import org.meshtastic.proto.ClientOnlyProtos.DeviceProfile
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.time.Duration.Companion.seconds
-import org.meshtastic.core.strings.R as Res
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -99,7 +134,8 @@ fun SettingsScreen(
     val localConfig by settingsViewModel.localConfig.collectAsStateWithLifecycle()
     val ourNode by settingsViewModel.ourNodeInfo.collectAsStateWithLifecycle()
     val isConnected by settingsViewModel.isConnected.collectAsStateWithLifecycle(false)
-
+    val isDfuCapable by settingsViewModel.isDfuCapable.collectAsStateWithLifecycle()
+    val destNode by viewModel.destNode.collectAsState()
     val state by viewModel.radioConfigState.collectAsStateWithLifecycle()
     var isWaiting by remember { mutableStateOf(false) }
     if (isWaiting) {
@@ -193,7 +229,7 @@ fun SettingsScreen(
                 if (state.isLocal) {
                     ourNode?.user?.longName
                 } else {
-                    val remoteName = viewModel.destNode.value?.user?.longName ?: ""
+                    val remoteName = destNode?.user?.longName ?: ""
                     stringResource(Res.string.remotely_administrating, remoteName)
                 },
                 ourNode = ourNode,
@@ -209,7 +245,10 @@ fun SettingsScreen(
             RadioConfigItemList(
                 state = state,
                 isManaged = localConfig.security.isManaged,
+                node = destNode,
                 excludedModulesUnlocked = excludedModulesUnlocked,
+                isDfuCapable = isDfuCapable,
+                onPreserveFavoritesToggle = { viewModel.setPreserveFavorites(it) },
                 onRouteClick = { route ->
                     isWaiting = true
                     viewModel.setResponseStateLoading(route)
@@ -232,7 +271,6 @@ fun SettingsScreen(
                 onNavigate = onNavigate,
             )
 
-            val scope = rememberCoroutineScope()
             val context = LocalContext.current
 
             TitledCard(title = stringResource(Res.string.app_settings), modifier = Modifier.padding(top = 16.dp)) {
@@ -307,6 +345,22 @@ fun SettingsScreen(
                 ) {
                     showThemePickerDialog = true
                 }
+
+                // Node DB cache limit (App setting)
+                val cacheLimit = settingsViewModel.dbCacheLimit.collectAsStateWithLifecycle().value
+                val cacheItems = remember {
+                    (DatabaseConstants.MIN_CACHE_LIMIT..DatabaseConstants.MAX_CACHE_LIMIT).map {
+                        it.toLong() to it.toString()
+                    }
+                }
+                DropDownPreference(
+                    title = stringResource(Res.string.device_db_cache_limit),
+                    enabled = true,
+                    items = cacheItems,
+                    selectedItem = cacheLimit.toLong(),
+                    onItemSelected = { selected -> settingsViewModel.setDbCacheLimit(selected.toInt()) },
+                    summary = stringResource(Res.string.device_db_cache_limit_summary),
+                )
                 val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
                 val nodeName = ourNode?.user?.shortName ?: ""
 
@@ -426,39 +480,54 @@ private fun AppVersionButton(
 
 @Composable
 private fun LanguagePickerDialog(onDismiss: () -> Unit) {
-    val context = LocalContext.current
-    val choices = remember {
-        context
-            .getLanguageMap()
-            .map { (languageTag, languageName) -> languageName to { LanguageUtils.setAppLocale(languageTag) } }
-            .toMap()
+    SettingsDialog(title = stringResource(Res.string.preferences_language), onDismiss = onDismiss) {
+        languageMap().forEach { (languageTag, languageName) ->
+            ListItem(text = languageName, trailingIcon = null) {
+                LanguageUtils.setAppLocale(languageTag)
+                onDismiss()
+            }
+        }
     }
+}
 
-    MultipleChoiceAlertDialog(
-        title = stringResource(Res.string.preferences_language),
-        message = "",
-        choices = choices,
-        onDismissRequest = onDismiss,
-    )
+private enum class ThemeOption(val label: StringResource, val mode: Int) {
+    DYNAMIC(label = Res.string.dynamic, mode = MODE_DYNAMIC),
+    LIGHT(label = Res.string.theme_light, mode = AppCompatDelegate.MODE_NIGHT_NO),
+    DARK(label = Res.string.theme_dark, mode = AppCompatDelegate.MODE_NIGHT_YES),
+    SYSTEM(label = Res.string.theme_system, mode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM),
 }
 
 @Composable
 private fun ThemePickerDialog(onClickTheme: (Int) -> Unit, onDismiss: () -> Unit) {
-    val resources = LocalResources.current
-    val themeMap = remember {
-        mapOf(
-            resources.getString(Res.string.dynamic) to MODE_DYNAMIC,
-            resources.getString(Res.string.theme_light) to AppCompatDelegate.MODE_NIGHT_NO,
-            resources.getString(Res.string.theme_dark) to AppCompatDelegate.MODE_NIGHT_YES,
-            resources.getString(Res.string.theme_system) to AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
-        )
-            .mapValues { (_, value) -> { onClickTheme(value) } }
+    SettingsDialog(title = stringResource(Res.string.choose_theme), onDismiss = onDismiss) {
+        ThemeOption.entries.forEach { option ->
+            ListItem(text = stringResource(option.label), trailingIcon = null) {
+                onClickTheme(option.mode)
+                onDismiss()
+            }
+        }
     }
+}
 
-    MultipleChoiceAlertDialog(
-        title = stringResource(Res.string.choose_theme),
-        message = "",
-        choices = themeMap,
-        onDismissRequest = onDismiss,
-    )
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SettingsDialog(title: String, onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+    BasicAlertDialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier.wrapContentWidth().wrapContentHeight(),
+            shape = MaterialTheme.shapes.large,
+            color = AlertDialogDefaults.containerColor,
+            tonalElevation = AlertDialogDefaults.TonalElevation,
+        ) {
+            Column {
+                Text(
+                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 8.dp),
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                )
+
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) { content() }
+            }
+        }
+    }
 }

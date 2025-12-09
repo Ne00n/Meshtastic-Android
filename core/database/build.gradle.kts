@@ -35,8 +35,10 @@ dependencies {
     implementation(projects.core.proto)
     implementation(projects.core.strings)
 
+    implementation(libs.androidx.room.paging)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.timber)
 
+    androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.ext.junit)
 }

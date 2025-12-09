@@ -21,7 +21,6 @@ package com.geeksville.mesh.ui
 
 import android.Manifest
 import android.os.Build
-import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -33,9 +32,11 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.recalculateWindowInsets
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -48,6 +49,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
@@ -71,8 +73,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
@@ -88,6 +89,7 @@ import com.geeksville.mesh.model.UIViewModel
 import com.geeksville.mesh.navigation.channelsGraph
 import com.geeksville.mesh.navigation.connectionsGraph
 import com.geeksville.mesh.navigation.contactsGraph
+import com.geeksville.mesh.navigation.firmwareGraph
 import com.geeksville.mesh.navigation.mapGraph
 import com.geeksville.mesh.navigation.nodesGraph
 import com.geeksville.mesh.navigation.settingsGraph
@@ -100,6 +102,9 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.meshtastic.core.model.DeviceVersion
 import org.meshtastic.core.navigation.ConnectionsRoutes
 import org.meshtastic.core.navigation.ContactsRoutes
@@ -108,7 +113,28 @@ import org.meshtastic.core.navigation.NodesRoutes
 import org.meshtastic.core.navigation.Route
 import org.meshtastic.core.navigation.SettingsRoutes
 import org.meshtastic.core.service.ConnectionState
+import org.meshtastic.core.strings.Res
+import org.meshtastic.core.strings.app_too_old
+import org.meshtastic.core.strings.bottom_nav_settings
+import org.meshtastic.core.strings.client_notification
+import org.meshtastic.core.strings.compromised_keys
+import org.meshtastic.core.strings.connected
+import org.meshtastic.core.strings.connecting
+import org.meshtastic.core.strings.connections
+import org.meshtastic.core.strings.conversations
+import org.meshtastic.core.strings.device_sleeping
+import org.meshtastic.core.strings.disconnected
+import org.meshtastic.core.strings.firmware_old
+import org.meshtastic.core.strings.firmware_too_old
+import org.meshtastic.core.strings.map
+import org.meshtastic.core.strings.must_update
+import org.meshtastic.core.strings.nodes
+import org.meshtastic.core.strings.okay
+import org.meshtastic.core.strings.should_update
+import org.meshtastic.core.strings.should_update_firmware
+import org.meshtastic.core.strings.traceroute
 import org.meshtastic.core.ui.component.MultipleChoiceAlertDialog
+import org.meshtastic.core.ui.component.ScrollToTopEvent
 import org.meshtastic.core.ui.component.SimpleAlertDialog
 import org.meshtastic.core.ui.icon.Conversations
 import org.meshtastic.core.ui.icon.Map
@@ -122,9 +148,8 @@ import org.meshtastic.core.ui.theme.StatusColors.StatusGreen
 import org.meshtastic.feature.node.metrics.annotateTraceroute
 import org.meshtastic.proto.MeshProtos
 import timber.log.Timber
-import org.meshtastic.core.strings.R as Res
 
-enum class TopLevelDestination(@StringRes val label: Int, val icon: ImageVector, val route: Route) {
+enum class TopLevelDestination(val label: StringResource, val icon: ImageVector, val route: Route) {
     Conversations(Res.string.conversations, MeshtasticIcons.Conversations, ContactsRoutes.ContactsGraph),
     Nodes(Res.string.nodes, MeshtasticIcons.Nodes, NodesRoutes.NodesGraph),
     Map(Res.string.map, MeshtasticIcons.Map, MapRoutes.Map),
@@ -151,13 +176,13 @@ fun MainScreen(uIViewModel: UIViewModel = hiltViewModel(), scanModel: BTScanMode
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         val notificationPermissionState = rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
         LaunchedEffect(connectionState, notificationPermissionState) {
-            if (connectionState == ConnectionState.CONNECTED && !notificationPermissionState.status.isGranted) {
+            if (connectionState == ConnectionState.Connected && !notificationPermissionState.status.isGranted) {
                 notificationPermissionState.launchPermissionRequest()
             }
         }
     }
 
-    if (connectionState == ConnectionState.CONNECTED) {
+    if (connectionState == ConnectionState.Connected) {
         sharedContactRequested?.let {
             SharedContactDialog(sharedContact = it, onDismiss = { uIViewModel.clearSharedContactRequested() })
         }
@@ -272,16 +297,18 @@ fun MainScreen(uIViewModel: UIViewModel = hiltViewModel(), scanModel: BTScanMode
                 item(
                     icon = {
                         TooltipBox(
-                            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
+                            positionProvider =
+                            TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
                             tooltip = {
                                 PlainTooltip {
                                     Text(
                                         if (isConnectionsRoute) {
                                             when (connectionState) {
-                                                ConnectionState.CONNECTED -> stringResource(Res.string.connected)
-                                                ConnectionState.DEVICE_SLEEP ->
+                                                ConnectionState.Connected -> stringResource(Res.string.connected)
+                                                ConnectionState.Connecting -> stringResource(Res.string.connecting)
+                                                ConnectionState.DeviceSleep ->
                                                     stringResource(Res.string.device_sleeping)
-                                                ConnectionState.DISCONNECTED -> stringResource(Res.string.disconnected)
+                                                ConnectionState.Disconnected -> stringResource(Res.string.disconnected)
                                             }
                                         } else {
                                             stringResource(destination.label)
@@ -357,14 +384,49 @@ fun MainScreen(uIViewModel: UIViewModel = hiltViewModel(), scanModel: BTScanMode
                     },
                     selected = isSelected,
                     label = {
-                        if (navSuiteType != NavigationSuiteType.ShortNavigationBarCompact) {
-                            Text(stringResource(destination.label))
-                        }
+                        Text(
+                            text = stringResource(destination.label),
+                            modifier =
+                            if (navSuiteType == NavigationSuiteType.ShortNavigationBarCompact) {
+                                Modifier.width(1.dp)
+                                    .height(1.dp) // hide on phone - min 1x1 or talkback won't see it.
+                            } else {
+                                Modifier
+                            },
+                        )
                     },
                     onClick = {
-                        navController.navigate(destination.route) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
+                        val isRepress = destination == topLevelDestination
+                        if (isRepress) {
+                            when (destination) {
+                                TopLevelDestination.Nodes -> {
+                                    val onNodesList = currentDestination?.hasRoute(NodesRoutes.Nodes::class) == true
+                                    if (!onNodesList) {
+                                        navController.navigate(destination.route) {
+                                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                    uIViewModel.emitScrollToTopEvent(ScrollToTopEvent.NodesTabPressed)
+                                }
+                                TopLevelDestination.Conversations -> {
+                                    val onConversationsList =
+                                        currentDestination?.hasRoute(ContactsRoutes.Contacts::class) == true
+                                    if (!onConversationsList) {
+                                        navController.navigate(destination.route) {
+                                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                    uIViewModel.emitScrollToTopEvent(ScrollToTopEvent.ConversationsTabPressed)
+                                }
+                                else -> Unit
+                            }
+                        } else {
+                            navController.navigate(destination.route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                            }
                         }
                     },
                 )
@@ -376,12 +438,13 @@ fun MainScreen(uIViewModel: UIViewModel = hiltViewModel(), scanModel: BTScanMode
             startDestination = NodesRoutes.NodesGraph,
             modifier = Modifier.fillMaxSize().recalculateWindowInsets().safeDrawingPadding().imePadding(),
         ) {
-            contactsGraph(navController)
-            nodesGraph(navController)
+            contactsGraph(navController, uIViewModel.scrollToTopEventFlow)
+            nodesGraph(navController, uIViewModel.scrollToTopEventFlow)
             mapGraph(navController)
             channelsGraph(navController)
             connectionsGraph(navController)
             settingsGraph(navController)
+            firmwareGraph(navController)
         }
     }
 }
@@ -392,7 +455,6 @@ private fun VersionChecks(viewModel: UIViewModel) {
     val connectionState by viewModel.connectionState.collectAsStateWithLifecycle()
     val myNodeInfo by viewModel.myNodeInfo.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val resources = LocalResources.current
 
     val myFirmwareVersion = myNodeInfo?.firmwareVersion
 
@@ -401,7 +463,7 @@ private fun VersionChecks(viewModel: UIViewModel) {
     val latestStableFirmwareRelease by
         viewModel.latestStableFirmwareRelease.collectAsStateWithLifecycle(DeviceVersion("2.6.4"))
     LaunchedEffect(connectionState, firmwareEdition) {
-        if (connectionState == ConnectionState.CONNECTED) {
+        if (connectionState == ConnectionState.Connected) {
             firmwareEdition?.let { edition ->
                 Timber.d("FirmwareEdition: ${edition.name}")
                 when (edition) {
@@ -419,13 +481,13 @@ private fun VersionChecks(viewModel: UIViewModel) {
 
     // Check if the device is running an old app version or firmware version
     LaunchedEffect(connectionState, myNodeInfo) {
-        if (connectionState == ConnectionState.CONNECTED) {
+        if (connectionState == ConnectionState.Connected) {
             myNodeInfo?.let { info ->
                 val isOld = info.minAppVersion > BuildConfig.VERSION_CODE && BuildConfig.DEBUG.not()
                 if (isOld) {
                     viewModel.showAlert(
-                        resources.getString(Res.string.app_too_old),
-                        resources.getString(Res.string.must_update),
+                        getString(Res.string.app_too_old),
+                        getString(Res.string.must_update),
                         dismissable = false,
                         onConfirm = {
                             val service = viewModel.meshService ?: return@showAlert
@@ -436,8 +498,8 @@ private fun VersionChecks(viewModel: UIViewModel) {
                     myFirmwareVersion?.let {
                         val curVer = DeviceVersion(it)
                         if (curVer < MeshService.absoluteMinDeviceVersion) {
-                            val title = resources.getString(Res.string.firmware_too_old)
-                            val message = resources.getString(Res.string.firmware_old)
+                            val title = getString(Res.string.firmware_too_old)
+                            val message = getString(Res.string.firmware_old)
                             viewModel.showAlert(
                                 title = title,
                                 html = message,
@@ -448,9 +510,8 @@ private fun VersionChecks(viewModel: UIViewModel) {
                                 },
                             )
                         } else if (curVer < MeshService.minDeviceVersion) {
-                            val title = resources.getString(Res.string.should_update_firmware)
-                            val message =
-                                resources.getString(Res.string.should_update, latestStableFirmwareRelease.asString)
+                            val title = getString(Res.string.should_update_firmware)
+                            val message = getString(Res.string.should_update, latestStableFirmwareRelease.asString)
                             viewModel.showAlert(title = title, message = message, dismissable = false, onConfirm = {})
                         }
                     }
